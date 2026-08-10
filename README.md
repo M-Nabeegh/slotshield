@@ -1,56 +1,82 @@
 # SlotShield
 
-SlotShield is a public SaaS-style booking-reliability simulator. Check a client's public appointment website, choose a high-risk booking edge case, replay a deterministic event trace, and inspect the guardrail that protects the final booking state.
+> Appointment reliability, before production.
+
+[Open the public preview](https://slotshield-lab.jatnabeegh.chatgpt.site) · [Read the staging adapter contract](docs/superpowers/specs/2026-08-10-slotshield-test-adapter.md)
 
 ![SlotShield social preview](public/slotshield-og.png)
 
-## Public preview
+SlotShield is an account-free Reliability Studio for appointment systems. It
+starts with the surface a visitor can reach, separates observed facts from
+behavior that needs a test environment, and lets a team rehearse deterministic
+booking failures without touching real customers, payments, or calendars.
 
-Open the live sandbox at [slotshield-lab.jatnabeegh.chatgpt.site](https://slotshield-lab.jatnabeegh.chatgpt.site). It is designed for a normal visitor or client to test immediately:
+## The product path
 
-1. Paste an appointment website into `Test your website` for a bounded public-surface check.
-2. Choose a failure mode or click `Try this scenario` for the deterministic sandbox.
-3. Read the fictional event trace as the guardrail handles the request.
-4. Inspect the reliability score, final state, and recommendation.
+The public preview is designed to be useful on the first visit — no ChatGPT
+sign-in, account creation, data upload, or payment field is required.
 
-No account, data upload, payment field, or setup is required.
+1. **Add your public link** — paste an appointment URL into the bounded,
+   read-only public check.
+2. **Review what was observed** — inspect HTTPS, reachability, response timing,
+   content type, booking-related links, and the check's explicit limits.
+3. **Test staging safely** — connect a test-only adapter for deeper checks, or
+   choose a fictional scenario for a local deterministic rehearsal.
 
-## Test a client website
+## What the public check can prove
 
-The public website check verifies only what a normal visitor can reach:
+SlotShield verifies only what a normal visitor can reach. The check reports:
 
-- HTTPS and reachability
+- HTTPS and the final reachable URL
 - HTTP status and response time
-- HTML page title and content type
-- Booking-related links such as `Book`, `Appointments`, or `Schedule`
+- HTML title and content type
+- Same-origin booking-related links such as `Book`, `Appointments`, or
+  `Schedule`
+- Plain-language findings for reachability, HTTPS, response time, content, and
+  booking surface
 
-It uses a short timeout, a small response limit, and a shallow same-origin
-discovery pass. It never submits a booking, payment, cancellation, webhook, or
-other mutation request. A URL check is not proof that a private booking backend
-is reliable.
+The checker uses a short timeout, a bounded response size, a small redirect
+limit, and a shallow same-origin discovery pass. It never submits a booking,
+payment, cancellation, webhook, or other mutation request.
 
-For deeper tests, a client can open `Audit a staging flow` and provide a
-temporary token for a test-only adapter. The adapter manifest and run response
-are documented in [`docs/superpowers/specs/2026-08-10-slotshield-test-adapter.md`](docs/superpowers/specs/2026-08-10-slotshield-test-adapter.md).
-Production URLs are deliberately rejected.
+> A verified public page is not proof that private booking behavior is reliable.
+> Concurrency, authentication, payment handling, and backend invariants belong
+> in a test environment.
 
-## What it demonstrates
+## Test-only staging adapter
 
-- A database-level unique slot constraint stopping a double-booking race.
-- Stale payment holds clearing before an availability check.
-- Idempotency keys absorbing duplicate payment callbacks.
-- Explicit time-zone normalization rejecting an invalid appointment time.
+The **Audit a staging flow** path accepts a client-owned HTTPS test URL and a
+temporary token. The adapter must expose:
 
-## Scenarios
+```text
+GET  /.well-known/slotshield-test.json
+POST /.well-known/slotshield-test/run
+```
 
-| Scenario | Failure | Guardrail |
+The manifest must declare `contractVersion: 1`, supported scenario IDs, and
+`testOnly: true`. Every run uses synthetic identifiers and an isolated test
+namespace. SlotShield clears the token after a successful run, does not render
+it in evidence, and does not fall back to production when the contract is
+missing or invalid.
+
+See the complete request/response shape in [`docs/superpowers/specs/2026-08-10-slotshield-test-adapter.md`](docs/superpowers/specs/2026-08-10-slotshield-test-adapter.md).
+
+## Fictional reliability rehearsals
+
+The simulator uses deterministic local data rather than pretending to be a
+live booking integration.
+
+| Scenario | Failure being rehearsed | Guardrail shown |
 | --- | --- | --- |
-| Double-booking race | Two requests claim the same slot within milliseconds. | Unique active-slot constraint. |
+| Double-booking race | Two requests claim one slot within milliseconds. | Unique active-slot constraint. |
 | Expired payment hold | A pending payment keeps a slot unavailable after its window ends. | Stale-hold cleanup before availability checks. |
 | Duplicate payment callback | A provider retries a completed payment event. | Persisted provider-event idempotency key. |
 | Time-zone mismatch | A local time does not map to the clinic schedule. | IANA time-zone normalization before validation. |
 
-## Run it locally
+Each rehearsal ends with an event trace, a final booking state, and a concrete
+recommendation. The data is intentionally fictional and repeatable.
+
+## Local development
 
 Requires Node.js 22.13 or newer.
 
@@ -59,39 +85,54 @@ npm install
 npm run dev
 ```
 
-Open the local address printed by the development server.
+Open the local URL printed by the development server. The app is a client-side
+React workspace with two bounded API routes:
 
-## Product boundaries
+```text
+app/api/website-check   public URL inspection
+app/api/staging-audit   opt-in test-only adapter call
+```
 
-SlotShield is a rehearsal workspace, not a booking service. It deliberately has
-no sign-in flow, customer database, payment provider, calendar, analytics
-tracker, or production booking action. Its two API routes only perform the
-bounded public website check and the opt-in staging adapter call. Client URLs,
-tokens, request bodies, and reports are not stored.
+There is no sign-in flow, customer database, payment provider, calendar,
+analytics tracker, or production booking action. No persistence layer is
+configured; the handlers do not store client URLs, tokens, request bodies, or
+reports.
 
 ## Verify it
 
 ```bash
-npm run test
-npm run lint
-npm run test:site
+npm run test       # unit and interaction coverage
+npm run lint       # ESLint
+npm run test:site  # production build + server-rendered HTML check
 ```
 
-The test suite covers each deterministic scenario, scenario selection, public access, clipboard fallback, the website-check safety policy, the staging adapter contract, and the reliability-report interaction. The site test builds the worker and checks its server-rendered SaaS copy.
+The suite covers the deterministic booking engine, all four scenarios, public
+URL safety, evidence/limit copy, blocked and network-error states, staging
+token privacy, clipboard fallback, keyboard focus preservation, responsive
+semantic controls, the reliability report, and server-rendered product copy.
 
-## Project structure
+## Project map
 
 ```text
-app/domain/               deterministic scenario data and booking engine
-app/components/           public access, audit, slot rail, picker, trace, and report UI
-app/lib/                  URL safety, page signals, and staging-contract normalization
-app/api/                  bounded public-check and staging-audit route handlers
-app/page.tsx              interactive SaaS workspace composition
-app/page.test.tsx         browser-style interaction coverage
-tests/                    server-rendered site verification
-public/                   social preview asset
+app/components/       Reliability Studio UI, audit states, trace, and report
+app/domain/            Deterministic scenario definitions and booking engine
+app/lib/               URL safety, page signals, preview URL, adapter contract
+app/api/                Bounded public-check and staging-audit route handlers
+app/page.tsx           Interactive workspace composition
+app/page.test.tsx      Testing Library interaction and accessibility coverage
+tests/                 Server-rendered site verification
+docs/superpowers/      Product specs, implementation plans, and adapter contract
+public/                Social preview and favicon assets
 ```
 
-## Stack
+## Design notes
 
-React 19, TypeScript, Vinext, Vitest, Testing Library, and CSS.
+The interface intentionally favors a calm paper/graphite system, line-based
+hierarchy, sentence-case copy, and evidence boundaries over marketing gradients
+or fake operational metrics. The first viewport makes the safe action obvious;
+the console previews the three depths of inspection; the lower workbench makes
+the trace — risk → event → protection → final state — the visual center.
+
+## Portfolio note
+
+Designed and engineered by Muhammad Nabeegh.
