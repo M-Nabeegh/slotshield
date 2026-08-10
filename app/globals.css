@@ -163,10 +163,9 @@ button {
   gap: 11px;
   min-width: 0;
   color: var(--ink-muted);
-  font-family: var(--font-mono);
-  font-size: 0.63rem;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  letter-spacing: 0;
 }
 
 .product-section {
@@ -191,10 +190,9 @@ button {
   gap: 9px;
   min-width: 0;
   color: var(--ink-muted);
-  font-family: var(--font-mono);
-  font-size: 0.61rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  letter-spacing: 0;
 }
 
 .public-access-status,
@@ -225,7 +223,8 @@ button {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  text-transform: none;
+  font-family: var(--font-mono);
+  font-size: 0.63rem;
 }
 
 .public-access-button {

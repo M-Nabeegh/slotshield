@@ -32,7 +32,7 @@ test("server-renders the SlotShield SaaS observatory", async () => {
   assert.match(html, /Rehearse the moment/i);
   assert.match(html, /booking trust breaks\./i);
   assert.match(html, /PUBLIC PREVIEW/i);
-  assert.match(html, /No account required/i);
+  assert.match(html, /No sign-in needed/i);
   assert.match(html, /Copy share link/i);
   assert.match(html, /Reliability lab \/ Booking flows/i);
   assert.match(html, /10:15/i);

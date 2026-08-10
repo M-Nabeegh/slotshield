@@ -43,8 +43,8 @@ export function PublicAccessBar({ shareUrl }: { shareUrl: string }) {
 
   return (
     <div className="public-access-bar">
-      <span className="public-access-status">PUBLIC PREVIEW</span>
-      <span className="public-access-trust">No account required</span>
+      <span className="public-access-status">Public preview</span>
+      <span className="public-access-trust">No sign-in needed</span>
       <span className="public-access-url" title={shareUrl}>
         {shareUrl}
       </span>
@@ -54,7 +54,7 @@ export function PublicAccessBar({ shareUrl }: { shareUrl: string }) {
         onClick={copyShareLink}
         aria-label={copyState === "copied" ? "Link copied" : "Copy share link"}
       >
-        {copyState === "copied" ? "Link copied" : "Copy share link"}
+        {copyState === "copied" ? "Link copied" : "Share link"}
       </button>
       {copyState === "manual" ? (
         <span className="public-access-fallback" role="status">

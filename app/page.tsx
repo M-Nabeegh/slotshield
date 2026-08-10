@@ -69,7 +69,7 @@ export default function Home() {
           </div>
           <div className="hero-trust" aria-label="Sandbox guarantees">
             <span>Synthetic data</span>
-            <span>No account required</span>
+            <span>No sign-in needed</span>
             <span>No integrations</span>
           </div>
         </div>

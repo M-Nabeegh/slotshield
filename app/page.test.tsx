@@ -33,9 +33,9 @@ describe("SlotShield dashboard", () => {
   it("shows an account-free public preview and canonical share URL", () => {
     render(<Home />);
 
-    expect(screen.getByText("PUBLIC PREVIEW")).toBeVisible();
+    expect(screen.getByText(/public preview/i)).toBeVisible();
     expect(screen.getByText(PUBLIC_PREVIEW_URL)).toBeVisible();
-    expect(screen.getAllByText(/no account required/i)).toHaveLength(2);
+    expect(screen.getAllByText(/no sign-in needed/i)).toHaveLength(2);
   });
 
   it("copies the public URL and confirms the action", async () => {
