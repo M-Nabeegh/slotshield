@@ -2758,3 +2758,35 @@ button.preflight-path:hover {
     justify-self: auto;
   }
 }
+
+.workbench-intro > h2 {
+  max-width: 42ch;
+  margin: 0;
+  color: var(--graphite);
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.2;
+  text-align: right;
+}
+
+@media (max-width: 720px) {
+  .workbench-intro > h2 {
+    margin-top: 0.7rem;
+    text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scenario-row,
+  .scenario-row .scenario-open,
+  .button,
+  .public-access-button {
+    transition: none !important;
+  }
+
+  .report-section {
+    animation: none !important;
+  }
+}

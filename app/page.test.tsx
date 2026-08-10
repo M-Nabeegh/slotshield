@@ -108,6 +108,26 @@ describe("SlotShield dashboard", () => {
     ).toBeVisible();
   });
 
+  it("keeps the rehearsal workbench named and focus-stable after a run", async () => {
+    const user = userEvent.setup();
+    render(<Home />);
+
+    const runButton = screen.getByRole("button", { name: /run scenario/i });
+    await user.click(runButton);
+
+    expect(
+      screen.getByRole("heading", {
+        name: "Selected risk → event trace → protection → final state.",
+      }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("region", {
+        name: "Selected risk → event trace → protection → final state.",
+      }),
+    ).toBeVisible();
+    expect(runButton).toHaveFocus();
+  });
+
   it("shows the public website check entry point", () => {
     render(<Home />);
 
@@ -166,6 +186,71 @@ describe("SlotShield dashboard", () => {
     ).toBeVisible();
   });
 
+  it("preserves focus while announcing a public result", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({
+          status: "verified",
+          requestedUrl: "https://clinic.example.com/",
+          finalUrl: "https://clinic.example.com/",
+          httpStatus: 200,
+          responseTimeMs: 184,
+          https: true,
+          pageTitle: "Clinic",
+          contentType: "text/html",
+          bookingLinks: [],
+          findings: [],
+          message: "Public surface verified.",
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      ),
+      ),
+    );
+
+    const user = userEvent.setup();
+    render(<Home />);
+    const input = screen.getByRole("textbox", { name: /public appointment url/i });
+    const checkButton = screen.getByRole("button", { name: /check site/i });
+    await user.type(input, "https://clinic.example.com");
+    await user.click(checkButton);
+
+    expect(
+      await screen.findByRole("heading", { name: "Public surface verified" }),
+    ).toBeVisible();
+    expect(checkButton).toHaveFocus();
+    expect(document.querySelector("#public-check-result")).toHaveAttribute(
+      "aria-live",
+      "polite",
+    );
+  });
+
+  it("keeps a blocked URL actionable without exposing implementation details", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            status: "blocked",
+            message: "Use an HTTPS website address.",
+          }),
+          { status: 400, headers: { "content-type": "application/json" } },
+        ),
+      ),
+    );
+
+    const user = userEvent.setup();
+    render(<Home />);
+    const input = screen.getByRole("textbox", { name: /public appointment url/i });
+    await user.type(input, "http://clinic.example.com");
+    await user.click(screen.getByRole("button", { name: /check site/i }));
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("Use an HTTPS website address.");
+    expect(input).toHaveValue("http://clinic.example.com");
+    expect(alert).not.toHaveTextContent(/stack|trace|undefined/i);
+  });
+
   it("explains a public check failure instead of hiding it", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
 
@@ -197,6 +282,44 @@ describe("SlotShield dashboard", () => {
     ).toBeVisible();
   });
 
+  it("clears a staging token after a synthetic audit without rendering it", async () => {
+    const token = "temporary-slotshield-token";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            status: "verified",
+            message: "Staging adapter completed with synthetic test data.",
+            scenarios: [
+              {
+                id: "race",
+                status: "passed",
+                evidence: "One claim accepted; the competing claim was rejected.",
+              },
+            ],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        ),
+      ),
+    );
+
+    const user = userEvent.setup();
+    render(<Home />);
+    await user.click(screen.getByRole("button", { name: /audit a staging flow/i }));
+    await user.type(
+      screen.getByRole("textbox", { name: /staging url/i }),
+      "https://staging.clinic.example.com",
+    );
+    const tokenInput = screen.getByLabelText(/temporary test token/i);
+    await user.type(tokenInput, token);
+    await user.click(screen.getByRole("button", { name: /run staging audit/i }));
+
+    expect(await screen.findByText(/staging audit complete/i)).toBeVisible();
+    expect(tokenInput).toHaveValue("");
+    expect(document.body.textContent).not.toContain(token);
+  });
+
   it("explains the product and puts the public check first", () => {
     render(<Home />);
 
@@ -224,6 +347,10 @@ describe("SlotShield dashboard", () => {
     expect(
       screen.getByText("Designed and engineered by Muhammad Nabeegh"),
     ).toBeVisible();
+    expect(document.querySelector("ol.how-it-works-list")).not.toBeNull();
+    expect(
+      screen.getByRole("textbox", { name: "Public appointment URL" }),
+    ).toHaveAccessibleName("Public appointment URL");
   });
 
   it("separates observed evidence from behavior the public check cannot prove", async () => {

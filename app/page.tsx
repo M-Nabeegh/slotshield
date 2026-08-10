@@ -58,7 +58,7 @@ export default function Home() {
       <section className="workbench content-width" id="simulation" aria-labelledby="workbench-heading">
         <div className="workbench-intro">
           <p className="studio-kicker">Reliability workbench</p>
-          <p id="workbench-heading">Selected risk → event trace → protection → final state.</p>
+          <h2 id="workbench-heading">Selected risk → event trace → protection → final state.</h2>
         </div>
 
         <div className="workbench-grid">
