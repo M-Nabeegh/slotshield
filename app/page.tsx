@@ -28,10 +28,6 @@ export default function Home() {
 
   return (
     <main className="site-shell">
-      <div className="grid-veil" aria-hidden="true" />
-      <div className="aurora aurora-one" aria-hidden="true" />
-      <div className="aurora aurora-two" aria-hidden="true" />
-
       <nav className="topbar" aria-label="SlotShield navigation">
         <a className="brand" href="#top" aria-label="SlotShield home">
           <SlotShieldMark compact />
