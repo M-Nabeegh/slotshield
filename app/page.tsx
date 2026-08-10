@@ -11,6 +11,7 @@ import { SlotRail } from "./components/SlotRail";
 import { runScenario } from "./domain/bookingEngine";
 import { scenarios } from "./domain/scenarios";
 import type { ScenarioId } from "./domain/types";
+import { WebsiteAuditPanel } from "./components/WebsiteAuditPanel";
 import { PUBLIC_PREVIEW_URL } from "./lib/publicPreview";
 
 export default function Home() {
@@ -75,6 +76,8 @@ export default function Home() {
         </div>
         <SlotRail hasRun={hasRun} selectedId={selectedId} />
       </section>
+
+      <WebsiteAuditPanel onTryScenario={() => setHasRun(true)} />
 
       <section className="failure-section content-width" id="failure-modes" aria-labelledby="failure-heading">
         <div className="section-heading">

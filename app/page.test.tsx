@@ -1,8 +1,12 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import Home from "./page";
 import { PUBLIC_PREVIEW_URL } from "./lib/publicPreview";
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe("SlotShield dashboard", () => {
   it("updates the briefing when a visitor selects the expired hold scenario", async () => {
@@ -101,6 +105,95 @@ describe("SlotShield dashboard", () => {
     expect(screen.getByRole("heading", { name: "Reliability report" })).toBeVisible();
     expect(
       screen.getByText(/enforce a unique active-slot constraint/i),
+    ).toBeVisible();
+  });
+
+  it("shows the public website check entry point", () => {
+    render(<Home />);
+
+    expect(
+      screen.getByRole("heading", { name: /test your website/i }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("textbox", { name: /website url/i }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: /check site/i }),
+    ).toBeVisible();
+  });
+
+  it("shows a verified public result and staging handoff", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            status: "verified",
+            requestedUrl: "https://clinic.example.com/",
+            finalUrl: "https://clinic.example.com/",
+            httpStatus: 200,
+            responseTimeMs: 220,
+            https: true,
+            pageTitle: "Clinic",
+            contentType: "text/html",
+            bookingLinks: [
+              {
+                label: "Book appointment",
+                url: "https://clinic.example.com/appointments",
+              },
+            ],
+            findings: [],
+            message: "Public surface verified.",
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        ),
+      ),
+    );
+
+    const user = userEvent.setup();
+    render(<Home />);
+    await user.type(
+      screen.getByRole("textbox", { name: /website url/i }),
+      "https://clinic.example.com",
+    );
+    await user.click(screen.getByRole("button", { name: /check site/i }));
+
+    expect(
+      await screen.findByRole("heading", { name: "Public surface verified" }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: /audit a staging flow/i }),
+    ).toBeVisible();
+  });
+
+  it("explains a public check failure instead of hiding it", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
+
+    const user = userEvent.setup();
+    render(<Home />);
+    await user.type(
+      screen.getByRole("textbox", { name: /website url/i }),
+      "https://clinic.example.com",
+    );
+    await user.click(screen.getByRole("button", { name: /check site/i }));
+
+    expect(await screen.findByText(/could not verify/i)).toBeVisible();
+  });
+
+  it("opens the staging-only setup and preserves the fake fallback", async () => {
+    const user = userEvent.setup();
+    render(<Home />);
+
+    await user.click(
+      screen.getByRole("button", { name: /audit a staging flow/i }),
+    );
+
+    expect(
+      screen.getByRole("textbox", { name: /staging url/i }),
+    ).toBeVisible();
+    expect(screen.getByLabelText(/temporary test token/i)).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: /try a fake scenario/i }),
     ).toBeVisible();
   });
 });
