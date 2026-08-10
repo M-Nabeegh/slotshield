@@ -1,22 +1,17 @@
 "use client";
 
-import { useState, type CSSProperties } from "react";
+import { useState } from "react";
 import { PublicAccessBar } from "./components/PublicAccessBar";
 import { ScenarioBriefing } from "./components/ScenarioBriefing";
 import { ScenarioPicker } from "./components/ScenarioPicker";
+import { ReliabilityReport } from "./components/ReliabilityReport";
+import { SimulationTimeline } from "./components/SimulationTimeline";
 import { SlotShieldMark } from "./components/SlotShieldMark";
 import { SlotRail } from "./components/SlotRail";
 import { runScenario } from "./domain/bookingEngine";
 import { scenarios } from "./domain/scenarios";
-import type { EventOutcome, ScenarioId } from "./domain/types";
+import type { ScenarioId } from "./domain/types";
 import { PUBLIC_PREVIEW_URL } from "./lib/publicPreview";
-
-const outcomeCopy: Record<EventOutcome, string> = {
-  received: "Received",
-  accepted: "Accepted",
-  rejected: "Rejected",
-  ignored: "Ignored",
-};
 
 export default function Home() {
   const [selectedId, setSelectedId] = useState<ScenarioId>("race");
@@ -24,9 +19,6 @@ export default function Home() {
   const selectedScenario =
     scenarios.find((scenario) => scenario.id === selectedId) ?? scenarios[0];
   const report = runScenario(selectedScenario.id);
-  const scoreStyle = {
-    background: `conic-gradient(var(--aqua) ${report.reliabilityScore * 3.6}deg, rgba(255, 255, 255, 0.1) 0deg)`,
-  } as CSSProperties;
 
   function selectScenario(id: ScenarioId) {
     setSelectedId(id);
@@ -109,74 +101,12 @@ export default function Home() {
             scenario={selectedScenario}
           />
 
-          <article className={`timeline-panel ${hasRun ? "has-run" : ""}`}>
-            <div className="timeline-header">
-              <div>
-                <p className="panel-label">Event trace</p>
-                <h2>{hasRun ? "Run complete" : "Ready to run"}</h2>
-              </div>
-              <span className="trace-code">TRACE / {report.id.toUpperCase()}</span>
-            </div>
-            <ol className="event-list">
-              {report.events.map((event) => (
-                <li className={`event-row outcome-${event.outcome}`} key={`${report.id}-${event.order}`}>
-                  <span className="event-order">{String(event.order).padStart(2, "0")}</span>
-                  <div className="event-rail"><span /></div>
-                  <div className="event-copy">
-                    <div className="event-meta">
-                      <span>{event.actor}</span>
-                      <time>{event.time}</time>
-                    </div>
-                    <p>{event.message}</p>
-                  </div>
-                  <span className="outcome-badge">{outcomeCopy[event.outcome]}</span>
-                </li>
-              ))}
-            </ol>
-          </article>
+          <SimulationTimeline hasRun={hasRun} report={report} />
         </div>
       </section>
 
       {hasRun ? (
-        <section className="report-section content-width" aria-labelledby="report-heading" aria-live="polite">
-          <div className="report-heading">
-            <div>
-              <p className="eyebrow">Simulation result</p>
-              <h2 id="report-heading">Reliability report</h2>
-            </div>
-            <p>One rule is doing the work. The trace shows exactly where it protected the slot.</p>
-          </div>
-
-          <div className="report-grid">
-            <article className="score-card">
-              <div className="score-ring" style={scoreStyle}>
-                <div className="score-center">
-                  <strong>{report.reliabilityScore}</strong>
-                  <span>/100</span>
-                </div>
-              </div>
-              <div>
-                <p className="panel-label">Reliability signal</p>
-                <h3>Guardrail held</h3>
-                <p>{report.finalState.summary}</p>
-              </div>
-            </article>
-
-            <article className="state-card">
-              <p className="panel-label">Final state</p>
-              <div className="state-metrics">
-                <Metric value={report.finalState.confirmedBookings} label="confirmed" />
-                <Metric value={report.finalState.rejectedRequests} label="rejected" />
-                <Metric value={report.finalState.cancelledHolds} label="holds cleared" />
-                <Metric value={report.finalState.ignoredCallbacks} label="duplicates ignored" />
-              </div>
-              <div className="recommendation">
-                <span className="recommendation-label">Recommendation</span>
-                <p>{report.recommendation}</p>
-              </div>
-            </article>
-          </div>
-        </section>
+        <ReliabilityReport report={report} shareUrl={PUBLIC_PREVIEW_URL} />
       ) : (
         <section className="ready-note content-width" aria-live="polite">
           <span className="ready-orb" aria-hidden="true" />
@@ -190,14 +120,5 @@ export default function Home() {
         <a href="#top">Back to top ↑</a>
       </footer>
     </main>
-  );
-}
-
-function Metric({ value, label }: { value: number; label: string }) {
-  return (
-    <div className="metric">
-      <strong>{String(value).padStart(2, "0")}</strong>
-      <span>{label}</span>
-    </div>
   );
 }

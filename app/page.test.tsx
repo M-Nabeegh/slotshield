@@ -89,4 +89,18 @@ describe("SlotShield dashboard", () => {
     ).toBeVisible();
     expect(screen.getAllByRole("button", { pressed: true })).toHaveLength(1);
   });
+
+  it("shows the deterministic trace and operational report after a run", async () => {
+    const user = userEvent.setup();
+    render(<Home />);
+
+    await user.click(screen.getByRole("button", { name: /try this scenario/i }));
+
+    expect(screen.getByRole("heading", { name: /simulation complete/i })).toBeVisible();
+    expect(screen.getByText("TRACE / RACE")).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Reliability report" })).toBeVisible();
+    expect(
+      screen.getByText(/enforce a unique active-slot constraint/i),
+    ).toBeVisible();
+  });
 });
