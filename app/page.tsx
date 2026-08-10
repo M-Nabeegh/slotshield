@@ -2,17 +2,14 @@
 
 import { useState, type CSSProperties } from "react";
 import { PublicAccessBar } from "./components/PublicAccessBar";
+import { ScenarioBriefing } from "./components/ScenarioBriefing";
+import { ScenarioPicker } from "./components/ScenarioPicker";
 import { SlotShieldMark } from "./components/SlotShieldMark";
+import { SlotRail } from "./components/SlotRail";
 import { runScenario } from "./domain/bookingEngine";
 import { scenarios } from "./domain/scenarios";
-import type { EventOutcome, ScenarioId, Severity } from "./domain/types";
+import type { EventOutcome, ScenarioId } from "./domain/types";
 import { PUBLIC_PREVIEW_URL } from "./lib/publicPreview";
-
-const severityCopy: Record<Severity, string> = {
-  critical: "Critical",
-  high: "High",
-  medium: "Medium",
-};
 
 const outcomeCopy: Record<EventOutcome, string> = {
   received: "Received",
@@ -56,63 +53,35 @@ export default function Home() {
 
       <section className="hero content-width" id="top" aria-labelledby="hero-title">
         <div className="hero-copy">
-          <p className="eyebrow">Booking reliability lab</p>
+          <p className="eyebrow">Booking reliability lab / Public simulator</p>
           <h1 id="hero-title">
-            Catch booking failures
-            <span>before customers do.</span>
+            Rehearse the moment
+            <span>booking trust breaks.</span>
           </h1>
           <p className="hero-description">
-            SlotShield lets you rehearse the ugly edge cases behind appointment
-            booking: races, stale payment holds, duplicated callbacks, and
-            broken time zones.
+            SlotShield turns the edge cases behind appointment booking into a
+            deterministic trace your team can understand before customers feel it.
           </p>
           <div className="hero-actions">
             <button
               className="button button-primary"
               type="button"
-              aria-label="Run selected simulation"
               onClick={() => setHasRun(true)}
             >
-              Run simulation
+              Try this scenario
               <span aria-hidden="true">→</span>
             </button>
             <a className="button button-quiet" href="#failure-modes">
-              Explore failure modes
+              Browse scenarios
             </a>
           </div>
-          <p className="microcopy">Synthetic data only. No live bookings, payments, or patient records.</p>
+          <div className="hero-trust" aria-label="Sandbox guarantees">
+            <span>Synthetic data</span>
+            <span>No account required</span>
+            <span>No integrations</span>
+          </div>
         </div>
-
-        <aside className="pulse-card" aria-label="SlotShield coverage summary">
-          <div className="pulse-card-heading">
-            <span className="eyebrow">Integrity pulse</span>
-            <span className="pulse-status">Protected</span>
-          </div>
-          <div className="pulse-meter" aria-hidden="true">
-            <span className="pulse-bar pulse-bar-one" />
-            <span className="pulse-bar pulse-bar-two" />
-            <span className="pulse-bar pulse-bar-three" />
-            <span className="pulse-bar pulse-bar-four" />
-            <span className="pulse-bar pulse-bar-five" />
-            <span className="pulse-bar pulse-bar-six" />
-            <span className="pulse-bar pulse-bar-seven" />
-            <span className="pulse-bar pulse-bar-eight" />
-          </div>
-          <div className="pulse-stats">
-            <div>
-              <strong>04</strong>
-              <span>failure modes</span>
-            </div>
-            <div>
-              <strong>100%</strong>
-              <span>synthetic</span>
-            </div>
-            <div>
-              <strong>0</strong>
-              <span>live integrations</span>
-            </div>
-          </div>
-        </aside>
+        <SlotRail hasRun={hasRun} selectedId={selectedId} />
       </section>
 
       <section className="failure-section content-width" id="failure-modes" aria-labelledby="failure-heading">
@@ -124,23 +93,7 @@ export default function Home() {
           <p>Pick one. SlotShield explains the guardrail, then plays the outcome as a deterministic trace.</p>
         </div>
 
-        <div className="scenario-grid">
-          {scenarios.map((scenario, index) => (
-            <button
-              className={`scenario-card ${scenario.id === selectedId ? "is-selected" : ""}`}
-              type="button"
-              key={scenario.id}
-              aria-pressed={scenario.id === selectedId}
-              onClick={() => selectScenario(scenario.id)}
-            >
-              <span className="scenario-index">0{index + 1}</span>
-              <span className="scenario-category">{scenario.category}</span>
-              <strong>{scenario.title}</strong>
-              <span className="scenario-description">{scenario.description}</span>
-              <span className="scenario-open" aria-hidden="true">↗</span>
-            </button>
-          ))}
-        </div>
+        <ScenarioPicker onSelect={selectScenario} selectedId={selectedId} />
       </section>
 
       <section className="workbench content-width" id="simulation" aria-labelledby="workbench-heading">
@@ -150,28 +103,11 @@ export default function Home() {
         </div>
 
         <div className="workbench-grid">
-          <article className="briefing-panel">
-            <div className="panel-kicker">
-              <span className={`severity severity-${report.severity}`}>{severityCopy[report.severity]} risk</span>
-              <span>Selected scenario</span>
-            </div>
-            <h2>{selectedScenario.title}</h2>
-            <p className="briefing-description">{selectedScenario.description}</p>
-            <dl className="briefing-list">
-              <div>
-                <dt>Risk</dt>
-                <dd>{selectedScenario.risk}</dd>
-              </div>
-              <div>
-                <dt>Protection</dt>
-                <dd>{selectedScenario.protection}</dd>
-              </div>
-            </dl>
-            <button className="button button-primary button-wide" type="button" onClick={() => setHasRun(true)}>
-              Run simulation
-              <span aria-hidden="true">→</span>
-            </button>
-          </article>
+          <ScenarioBriefing
+            onRun={() => setHasRun(true)}
+            report={report}
+            scenario={selectedScenario}
+          />
 
           <article className={`timeline-panel ${hasRun ? "has-run" : ""}`}>
             <div className="timeline-header">

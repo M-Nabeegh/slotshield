@@ -22,9 +22,7 @@ describe("SlotShield dashboard", () => {
     const user = userEvent.setup();
     render(<Home />);
 
-    await user.click(
-      screen.getByRole("button", { name: "Run selected simulation" }),
-    );
+    await user.click(screen.getByRole("button", { name: /try this scenario/i }));
 
     expect(
       screen.getByRole("heading", { name: "Reliability report" }),
@@ -37,7 +35,7 @@ describe("SlotShield dashboard", () => {
 
     expect(screen.getByText("PUBLIC PREVIEW")).toBeVisible();
     expect(screen.getByText(PUBLIC_PREVIEW_URL)).toBeVisible();
-    expect(screen.getByText(/no account required/i)).toBeVisible();
+    expect(screen.getAllByText(/no account required/i)).toHaveLength(2);
   });
 
   it("copies the public URL and confirms the action", async () => {
@@ -66,5 +64,29 @@ describe("SlotShield dashboard", () => {
     await user.click(screen.getByRole("button", { name: /copy share link/i }));
 
     expect(screen.getByText("Select and copy this link")).toBeVisible();
+  });
+
+  it("presents the slot rail and a clear first-run scenario action", () => {
+    render(<Home />);
+
+    expect(screen.getByText("10:15", { exact: true })).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: /try this scenario/i }),
+    ).toBeVisible();
+    expect(screen.getByText(/synthetic data/i)).toBeVisible();
+  });
+
+  it("keeps all four scenario modes selectable", async () => {
+    const user = userEvent.setup();
+    render(<Home />);
+
+    await user.click(
+      screen.getByRole("button", { name: /time-zone mismatch/i }),
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "Time-zone mismatch" }),
+    ).toBeVisible();
+    expect(screen.getAllByRole("button", { pressed: true })).toHaveLength(1);
   });
 });
