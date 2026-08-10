@@ -50,6 +50,32 @@ decorative or dashboard-generic.
 - Replace repeated pill labels with clear hierarchy, generous spacing, and
   quiet dividers. A status chip is used only when it conveys live state.
 
+### Portfolio quality bar
+
+This is a flagship portfolio product, not a generic SaaS landing page. The
+implementation should be restrained, precise, calm, and native-quality. It
+must actively avoid giant gradient blobs, excessive glow, purple-heavy
+surfaces, unnecessary glassmorphism, endless nested cards, decorative charts,
+fake metrics, arbitrary gradient text, excessive shadows, and animations that
+do not clarify state. If an element does not improve comprehension, trust,
+interaction, or hierarchy, it is removed.
+
+The preflight console is one instrument with three modes, not three equal
+marketing cards: `Public surface` is the active read-only path, `Staging
+adapter` is the quiet test-only path, and `Fictional scenarios` is the local
+rehearsal path. The active mode is obvious through hierarchy and signal color;
+inactive modes stay quiet.
+
+Evidence details may be shown only when they exist in the current response
+contract, such as HTTP status, response time, same-origin links, detected
+booking terms, and the applied boundary. The redesign must not invent uptime,
+conversion, safety, or reliability metrics.
+
+Motion is nearly invisible: short state transitions, a refined hover/focus
+response, and a subtle console change are sufficient. No bouncing, parallax,
+floating decoration, animated gradients, or ubiquitous glow. Reduced motion
+preserves every state change without relying on animation.
+
 ### Information architecture
 
 ```text
@@ -152,6 +178,16 @@ spacing, and signal tokens as the studio shell.
 transient run state, while network and domain logic stay in their existing
 modules.
 
+### Footer credit
+
+The footer stays concise and useful. Under the stable preview and no-real-
+actions boundary, it includes the attribution:
+
+> Designed and engineered by Muhammad Nabeegh
+
+The credit is quiet, sentence case, and visually secondary to the product
+surface. It is not presented as a fake customer or marketing claim.
+
 ## Responsive and accessibility behavior
 
 - Desktop uses a balanced two-column hero: explanatory action surface on the
@@ -204,6 +240,11 @@ Before deployment, verify:
    are checked in tests or browser verification.
 8. `npm test`, `npm run lint`, `npm run test:site`, and the production
    dependency audit remain green.
+9. Browser review covers the desktop first viewport, successful and failed
+   public checks, staging form, selected and completed fictional scenarios,
+   390px mobile, keyboard focus, and reduced-motion behavior.
+10. The footer renders `Designed and engineered by Muhammad Nabeegh` without
+    competing with the primary product action.
 
 ## Implementation slices and commit policy
 
