@@ -187,7 +187,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 9px;
+  gap: 10px;
   min-width: 0;
   color: var(--ink-muted);
   font-family: var(--font-body);
@@ -218,6 +218,18 @@ button {
   background: rgba(255, 255, 255, 0.55);
 }
 
+.public-access-detail {
+  color: var(--ink-muted);
+  font-size: 0.63rem;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.public-access-detail + .public-access-detail {
+  padding-left: 10px;
+  border-left: 1px solid var(--line);
+}
+
 .public-access-url {
   max-width: 220px;
   overflow: hidden;
@@ -227,29 +239,6 @@ button {
   font-size: 0.63rem;
 }
 
-.public-access-button {
-  min-height: 36px;
-  padding: 0 13px;
-  border: 1px solid var(--graphite);
-  border-radius: 9px;
-  color: var(--porcelain);
-  cursor: pointer;
-  background: var(--graphite);
-  font-family: var(--font-body);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0;
-  text-transform: none;
-  transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
-}
-
-.public-access-button:hover {
-  transform: translateY(-1px);
-  background: var(--graphite-soft);
-  box-shadow: 0 7px 16px rgba(17, 21, 29, 0.16);
-}
-
-.public-access-button:focus-visible,
 .button:focus-visible,
 .scenario-card:focus-visible,
 .text-button:focus-visible,
@@ -258,16 +247,6 @@ button {
 .footer a:focus-visible {
   outline: 3px solid rgba(109, 99, 255, 0.58);
   outline-offset: 3px;
-}
-
-.public-access-fallback {
-  flex-basis: 100%;
-  color: var(--conflict-coral);
-  font-family: var(--font-body);
-  font-size: 0.73rem;
-  letter-spacing: 0;
-  text-align: right;
-  text-transform: none;
 }
 
 .website-audit {
@@ -1645,16 +1624,18 @@ button {
     display: none;
   }
 
+  .public-access-detail-secondary {
+    display: none;
+  }
+
   .public-access-status {
     min-height: 25px;
     padding: 0 7px;
     font-size: 0.52rem;
   }
 
-  .public-access-button {
-    min-height: 42px;
-    padding: 0 10px;
-    font-size: 0.7rem;
+  .public-access-detail {
+    font-size: 0.56rem;
   }
 
   .hero {
@@ -2781,8 +2762,7 @@ button.preflight-path:hover {
 @media (prefers-reduced-motion: reduce) {
   .scenario-row,
   .scenario-row .scenario-open,
-  .button,
-  .public-access-button {
+  .button {
     transition: none !important;
   }
 

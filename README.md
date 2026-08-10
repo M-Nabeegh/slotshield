@@ -1,52 +1,62 @@
+<div align="center">
+
+<img src="public/slotshield-og.png" alt="SlotShield reliability studio preview" width="760" />
+
 # SlotShield
 
-> Appointment reliability, before production.
+### Appointment reliability, before production.
 
-[Open the public preview](https://slotshield-lab.jatnabeegh.chatgpt.site) · [Read the staging adapter contract](docs/superpowers/specs/2026-08-10-slotshield-test-adapter.md)
+An account-free Reliability Studio for finding fragile booking flows, explaining what a public check can actually prove, and rehearsing failure modes safely.
 
-![SlotShield social preview](public/slotshield-og.png)
+<a href="https://slotshield-lab.jatnabeegh.chatgpt.site">Open the live preview</a> · <a href="docs/superpowers/specs/2026-08-10-slotshield-test-adapter.md">Read the adapter contract</a>
 
-SlotShield is an account-free Reliability Studio for appointment systems. It
-starts with the surface a visitor can reach, separates observed facts from
-behavior that needs a test environment, and lets a team rehearse deterministic
-booking failures without touching real customers, payments, or calendars.
+</div>
 
-## The product path
+<br />
 
-The public preview is designed to be useful on the first visit — no ChatGPT
-sign-in, account creation, data upload, or payment field is required.
+## Why this exists
 
-1. **Add your public link** — paste an appointment URL into the bounded,
-   read-only public check.
-2. **Review what was observed** — inspect HTTPS, reachability, response timing,
-   content type, booking-related links, and the check's explicit limits.
-3. **Test staging safely** — connect a test-only adapter for deeper checks, or
-   choose a fictional scenario for a local deterministic rehearsal.
+Appointment software can look healthy while quietly losing slots, accepting a
+duplicate callback, or showing the wrong time zone. SlotShield turns those
+risks into a small, inspectable workflow:
 
-## What the public check can prove
+| 01 · Inspect | 02 · Separate | 03 · Rehearse |
+| --- | --- | --- |
+| Check the public appointment surface from a normal browser request. | Make the boundary between observed evidence and unverified backend behavior explicit. | Run deterministic, synthetic failure scenarios before connecting a real system. |
 
-SlotShield verifies only what a normal visitor can reach. The check reports:
+The result is intentionally more useful than a green check: every run ends in
+evidence, a limitation, and a next action.
 
-- HTTPS and the final reachable URL
-- HTTP status and response time
-- HTML title and content type
-- Same-origin booking-related links such as `Book`, `Appointments`, or
-  `Schedule`
-- Plain-language findings for reachability, HTTPS, response time, content, and
-  booking surface
+## The product flow
 
-The checker uses a short timeout, a bounded response size, a small redirect
-limit, and a shallow same-origin discovery pass. It never submits a booking,
-payment, cancellation, webhook, or other mutation request.
+1. **Paste a public appointment link.** No ChatGPT sign-in, account creation,
+   upload, payment field, or customer data is required.
+2. **Review the public check.** SlotShield records HTTPS, the final URL, HTTP
+   status, response timing, page title, content type, and same-origin booking
+   links such as `Book`, `Appointments`, or `Schedule`.
+3. **Choose a deeper rehearsal.** Pick a fictional scenario locally or point a
+   test-only staging adapter at an isolated environment.
+4. **Read the report.** The report separates what was observed from what still
+   needs a staging or production review.
 
-> A verified public page is not proof that private booking behavior is reliable.
-> Concurrency, authentication, payment handling, and backend invariants belong
-> in a test environment.
+## Evidence boundary
+
+The public check is deliberately bounded. It can show that a page is reachable
+and expose useful booking-surface signals; it cannot prove private scheduling
+logic, concurrency behavior, authentication, payment handling, webhooks, or
+database invariants.
+
+Every request uses a short timeout, a bounded response size, a small redirect
+limit, and a shallow same-origin discovery pass. SlotShield never submits a
+booking, payment, cancellation, webhook, or other mutation request.
+
+> A reachable booking page is a starting point for reliability work, not a
+> production certification.
 
 ## Test-only staging adapter
 
 The **Audit a staging flow** path accepts a client-owned HTTPS test URL and a
-temporary token. The adapter must expose:
+temporary token. The adapter contract is intentionally narrow:
 
 ```text
 GET  /.well-known/slotshield-test.json
@@ -54,17 +64,18 @@ POST /.well-known/slotshield-test/run
 ```
 
 The manifest must declare `contractVersion: 1`, supported scenario IDs, and
-`testOnly: true`. Every run uses synthetic identifiers and an isolated test
-namespace. SlotShield clears the token after a successful run, does not render
-it in evidence, and does not fall back to production when the contract is
-missing or invalid.
+`testOnly: true`. Runs use synthetic identifiers and an isolated test
+namespace. SlotShield clears a token after a successful run, excludes it from
+the evidence report, and refuses to fall back to production when the contract
+is missing or invalid.
 
-See the complete request/response shape in [`docs/superpowers/specs/2026-08-10-slotshield-test-adapter.md`](docs/superpowers/specs/2026-08-10-slotshield-test-adapter.md).
+See the complete request and response shape in the
+[staging adapter contract](docs/superpowers/specs/2026-08-10-slotshield-test-adapter.md).
 
 ## Fictional reliability rehearsals
 
-The simulator uses deterministic local data rather than pretending to be a
-live booking integration.
+The simulator is deterministic and local. It does not pretend to be connected
+to a clinic, calendar, payment provider, or customer database.
 
 | Scenario | Failure being rehearsed | Guardrail shown |
 | --- | --- | --- |
@@ -74,9 +85,9 @@ live booking integration.
 | Time-zone mismatch | A local time does not map to the clinic schedule. | IANA time-zone normalization before validation. |
 
 Each rehearsal ends with an event trace, a final booking state, and a concrete
-recommendation. The data is intentionally fictional and repeatable.
+recommendation. The data is fictional, repeatable, and safe to inspect.
 
-## Local development
+## Run it locally
 
 Requires Node.js 22.13 or newer.
 
@@ -85,18 +96,16 @@ npm install
 npm run dev
 ```
 
-Open the local URL printed by the development server. The app is a client-side
-React workspace with two bounded API routes:
+The app is a client-side React workspace with two bounded API routes:
 
 ```text
 app/api/website-check   public URL inspection
 app/api/staging-audit   opt-in test-only adapter call
 ```
 
-There is no sign-in flow, customer database, payment provider, calendar,
-analytics tracker, or production booking action. No persistence layer is
-configured; the handlers do not store client URLs, tokens, request bodies, or
-reports.
+No sign-in flow, customer database, payment provider, calendar, analytics
+tracker, or production booking action is configured. The handlers do not store
+client URLs, tokens, request bodies, or reports.
 
 ## Verify it
 
@@ -107,9 +116,9 @@ npm run test:site  # production build + server-rendered HTML check
 ```
 
 The suite covers the deterministic booking engine, all four scenarios, public
-URL safety, evidence/limit copy, blocked and network-error states, staging
-token privacy, clipboard fallback, keyboard focus preservation, responsive
-semantic controls, the reliability report, and server-rendered product copy.
+URL safety, evidence and limit copy, blocked and network-error states, staging
+token privacy, keyboard focus preservation, responsive controls, the
+reliability report, and server-rendered product copy.
 
 ## Project map
 
@@ -125,14 +134,19 @@ docs/superpowers/      Product specs, implementation plans, and adapter contract
 public/                Social preview and favicon assets
 ```
 
-## Design notes
+## Design direction
 
-The interface intentionally favors a calm paper/graphite system, line-based
-hierarchy, sentence-case copy, and evidence boundaries over marketing gradients
-or fake operational metrics. The first viewport makes the safe action obvious;
-the console previews the three depths of inspection; the lower workbench makes
-the trace — risk → event → protection → final state — the visual center.
+SlotShield uses a calm paper, graphite, and mint system rather than a generic
+dashboard template. The hierarchy is built from readable evidence, restrained
+status labels, and a trace that makes the chain visible:
 
-## Portfolio note
+`risk → event → protection → final state`
 
-Designed and engineered by Muhammad Nabeegh.
+The visual system is responsive from a narrow phone viewport to a wide desktop
+workbench, with no account wall between a curious employer and the product.
+
+<div align="center">
+
+**Designed and engineered by Muhammad Nabeegh.**
+
+</div>

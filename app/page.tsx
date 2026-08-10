@@ -37,7 +37,7 @@ export default function Home() {
           <span className="product-section">Simulator</span>
           <span className="product-breadcrumb">Reliability lab / Booking flows</span>
         </div>
-        <PublicAccessBar shareUrl={PUBLIC_PREVIEW_URL} />
+        <PublicAccessBar publicUrl={PUBLIC_PREVIEW_URL} />
       </nav>
 
       <WebsiteAuditPanel onTryScenario={() => setHasRun(true)} />

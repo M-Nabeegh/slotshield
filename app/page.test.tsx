@@ -34,40 +34,17 @@ describe("SlotShield dashboard", () => {
     expect(screen.getByText(/one patient holds the slot/i)).toBeVisible();
   });
 
-  it("shows an account-free public preview and canonical share URL", () => {
+  it("shows an account-free, read-only public preview", () => {
     render(<Home />);
 
     expect(screen.getByText(/public preview/i)).toBeVisible();
     expect(screen.getByText(PUBLIC_PREVIEW_URL)).toBeVisible();
     expect(screen.getByText(/no sign-in needed/i)).toBeVisible();
-  });
-
-  it("copies the public URL and confirms the action", async () => {
-    const user = userEvent.setup();
-    const writeText = vi.fn().mockResolvedValue(undefined);
-    Object.defineProperty(navigator, "clipboard", {
-      configurable: true,
-      value: { writeText },
-    });
-    render(<Home />);
-
-    await user.click(screen.getByRole("button", { name: /copy share link/i }));
-
-    expect(writeText).toHaveBeenCalledWith(PUBLIC_PREVIEW_URL);
-    expect(screen.getByText("Link copied")).toBeVisible();
-  });
-
-  it("offers a selectable manual-copy fallback when clipboard access fails", async () => {
-    const user = userEvent.setup();
-    Object.defineProperty(navigator, "clipboard", {
-      configurable: true,
-      value: undefined,
-    });
-    render(<Home />);
-
-    await user.click(screen.getByRole("button", { name: /copy share link/i }));
-
-    expect(screen.getByText("Select and copy this link")).toBeVisible();
+    expect(screen.getByText(/read-only check/i)).toBeVisible();
+    expect(screen.getByText("Synthetic data", { exact: true })).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: /share link/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("presents the slot rail and a clear first-run scenario action", () => {
@@ -77,7 +54,7 @@ describe("SlotShield dashboard", () => {
     expect(
       screen.getByRole("button", { name: /try this scenario/i }),
     ).toBeVisible();
-    expect(screen.getByText(/synthetic data/i)).toBeVisible();
+    expect(screen.getByText("Synthetic data", { exact: true })).toBeVisible();
   });
 
   it("keeps all four scenario modes selectable", async () => {
