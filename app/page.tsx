@@ -1,9 +1,12 @@
 "use client";
 
 import { useState, type CSSProperties } from "react";
+import { PublicAccessBar } from "./components/PublicAccessBar";
+import { SlotShieldMark } from "./components/SlotShieldMark";
 import { runScenario } from "./domain/bookingEngine";
 import { scenarios } from "./domain/scenarios";
 import type { EventOutcome, ScenarioId, Severity } from "./domain/types";
+import { PUBLIC_PREVIEW_URL } from "./lib/publicPreview";
 
 const severityCopy: Record<Severity, string> = {
   critical: "Critical",
@@ -41,16 +44,14 @@ export default function Home() {
 
       <nav className="topbar" aria-label="SlotShield navigation">
         <a className="brand" href="#top" aria-label="SlotShield home">
-          <span className="brand-mark" aria-hidden="true">
-            SS
-          </span>
-          <span>SlotShield</span>
+          <SlotShieldMark compact />
+          <span className="brand-name">SlotShield</span>
         </a>
-        <div className="topbar-meta">
-          <span className="live-dot" aria-hidden="true" />
-          <span>Simulation environment</span>
-          <span className="version-chip">v1.0</span>
+        <div className="product-context" aria-label="Current workspace">
+          <span className="product-section">Simulator</span>
+          <span className="product-breadcrumb">Reliability lab / Booking flows</span>
         </div>
+        <PublicAccessBar shareUrl={PUBLIC_PREVIEW_URL} />
       </nav>
 
       <section className="hero content-width" id="top" aria-labelledby="hero-title">
@@ -248,7 +249,7 @@ export default function Home() {
       )}
 
       <footer className="footer content-width">
-        <span className="brand footer-brand"><span className="brand-mark" aria-hidden="true">SS</span>SlotShield</span>
+        <span className="brand footer-brand"><SlotShieldMark compact />SlotShield</span>
         <p>Designed as a reliability rehearsal, with no real booking actions.</p>
         <a href="#top">Back to top ↑</a>
       </footer>
