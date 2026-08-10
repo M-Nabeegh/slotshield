@@ -196,4 +196,71 @@ describe("SlotShield dashboard", () => {
       screen.getByRole("button", { name: /try a fake scenario/i }),
     ).toBeVisible();
   });
+
+  it("explains the product and puts the public check first", () => {
+    render(<Home />);
+
+    expect(
+      screen.getByRole("heading", {
+        name: "Find the booking failures customers never see.",
+      }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("textbox", { name: /public appointment url/i }),
+    ).toBeVisible();
+    expect(screen.getByRole("button", { name: /check site/i })).toBeVisible();
+    expect(
+      screen.getByText(/no sign-in\. public https pages only/i),
+    ).toBeVisible();
+    expect(screen.getByRole("heading", { name: /how it works/i })).toBeVisible();
+    expect(screen.getByText(/add your public link/i)).toBeVisible();
+    expect(screen.getByText(/review what was observed/i)).toBeVisible();
+    expect(screen.getByText(/test staging safely/i)).toBeVisible();
+  });
+
+  it("credits the product without competing with the main action", () => {
+    render(<Home />);
+
+    expect(
+      screen.getByText("Designed and engineered by Muhammad Nabeegh"),
+    ).toBeVisible();
+  });
+
+  it("separates observed evidence from behavior the public check cannot prove", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({
+          status: "verified",
+          requestedUrl: "https://clinic.example.com/",
+          finalUrl: "https://clinic.example.com/",
+          httpStatus: 200,
+          responseTimeMs: 184,
+          https: true,
+          pageTitle: "Clinic",
+          contentType: "text/html",
+          bookingLinks: [],
+          findings: [],
+          message: "Public surface verified.",
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      ),
+    ),
+    );
+
+    const user = userEvent.setup();
+    render(<Home />);
+    await user.type(
+      screen.getByRole("textbox", { name: /public appointment url/i }),
+      "https://clinic.example.com",
+    );
+    await user.click(screen.getByRole("button", { name: /check site/i }));
+
+    expect(
+      await screen.findByRole("heading", { name: "Public surface verified" }),
+    ).toBeVisible();
+    expect(screen.getByRole("heading", { name: /what we observed/i })).toBeVisible();
+    expect(screen.getByText(/private booking behavior was not tested/i)).toBeVisible();
+    expect(screen.getByRole("heading", { name: /next action/i })).toBeVisible();
+  });
 });

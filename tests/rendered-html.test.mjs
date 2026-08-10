@@ -29,11 +29,12 @@ test("server-renders the SlotShield SaaS observatory", async () => {
 
   const html = await response.text();
   assert.match(html, /<title>SlotShield \| Booking Reliability Simulator<\/title>/i);
-  assert.match(html, /Rehearse the moment/i);
-  assert.match(html, /booking trust breaks\./i);
+  assert.match(html, /Find the booking failures customers never see\./i);
   assert.match(html, /PUBLIC PREVIEW/i);
   assert.match(html, /No sign-in needed/i);
   assert.match(html, /Copy share link/i);
+  assert.match(html, /How it works/i);
+  assert.match(html, /Add your public link/i);
   assert.match(html, /Reliability lab \/ Booking flows/i);
   assert.match(html, /10:15/i);
   assert.match(html, /Double-booking race/i);
@@ -42,6 +43,7 @@ test("server-renders the SlotShield SaaS observatory", async () => {
   assert.match(html, /Website URL/i);
   assert.match(html, /Check site/i);
   assert.match(html, /No login.*No booking actions.*No patient data/i);
+  assert.match(html, /Designed and engineered by Muhammad Nabeegh/i);
   assert.doesNotMatch(html, /Your site is taking shape/i);
   assert.doesNotMatch(html, /codex-preview/i);
 });
