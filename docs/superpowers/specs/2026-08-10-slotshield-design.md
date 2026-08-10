@@ -21,7 +21,7 @@ The four fixed scenarios are:
 
 ## Technical design
 
-The website is a Vite, React, and TypeScript single-page app. The simulator lives in pure TypeScript domain modules so automated tests can exercise the booking rules without rendering the UI.
+The website uses the bundled Vinext, React, and TypeScript starter so it can run locally and produce Cloudflare Worker-compatible output. The simulator lives in pure TypeScript domain modules so automated tests can exercise the booking rules without rendering the UI.
 
 `runScenario(id)` accepts a scenario identifier and returns a complete immutable report: title, severity, ordered events, final booking state, reliability score, and remediation. React owns only selected-scenario and run-progress state. CSS provides the visual system without a component library.
 
@@ -29,15 +29,15 @@ The website is a Vite, React, and TypeScript single-page app. The simulator live
 
 | Component | Responsibility |
 | --- | --- |
-| `src/domain/types.ts` | Shared scenario, event, and report types. |
-| `src/domain/scenarios.ts` | Static scenario definitions and practical recommendations. |
-| `src/domain/bookingEngine.ts` | Deterministic booking-safety rules and scenario runner. |
-| `src/domain/bookingEngine.test.ts` | Unit tests for booking outcomes and event ordering. |
-| `src/App.tsx` | Dashboard composition and selected/run state. |
-| `src/components/ScenarioCard.tsx` | Accessible selectable scenario card. |
-| `src/components/RunTimeline.tsx` | Ordered event timeline with simulated progression. |
-| `src/components/ReliabilityReport.tsx` | Final state, score, and remediation display. |
-| `src/styles.css` | Responsive visual system. |
+| `app/domain/types.ts` | Shared scenario, event, and report types. |
+| `app/domain/scenarios.ts` | Static scenario definitions and practical recommendations. |
+| `app/domain/bookingEngine.ts` | Deterministic booking-safety rules and scenario runner. |
+| `app/domain/bookingEngine.test.ts` | Unit tests for booking outcomes and event ordering. |
+| `app/page.tsx` | Dashboard composition and selected/run state. |
+| `app/components/ScenarioCard.tsx` | Accessible selectable scenario card. |
+| `app/components/RunTimeline.tsx` | Ordered event timeline with simulated progression. |
+| `app/components/ReliabilityReport.tsx` | Final state, score, and remediation display. |
+| `app/globals.css` | Responsive visual system. |
 
 ## Safety and privacy constraints
 

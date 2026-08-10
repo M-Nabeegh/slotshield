@@ -4,9 +4,9 @@
 
 **Goal:** Build a polished, public, fake-data-only website that simulates four booking-system reliability failures and explains their protections.
 
-**Architecture:** A Vite React application renders a dashboard around a pure TypeScript simulation engine. Static scenario definitions describe the user-facing copy, while `runScenario()` applies deterministic booking rules and returns a report for the UI and test suite.
+**Architecture:** A Vinext React application renders a dashboard around a pure TypeScript simulation engine. Static scenario definitions describe the user-facing copy, while `runScenario()` applies deterministic booking rules and returns a report for the UI and test suite. The starter's Worker-compatible build remains intact.
 
-**Tech Stack:** React 19, TypeScript, Vite, Vitest, React Testing Library, CSS, Lucide React icons.
+**Tech Stack:** Vinext, React 19, TypeScript, Vitest, React Testing Library, CSS, and the bundled Sites Vite plugin.
 
 ## Global Constraints
 
@@ -24,20 +24,20 @@
 - Create: `package.json`
 - Create: `tsconfig.json`
 - Create: `vite.config.ts`
-- Create: `index.html`
-- Create: `src/main.tsx`
-- Create: `src/test/setup.ts`
+- Create: `app/layout.tsx`
+- Create: `app/page.tsx`
+- Create: `app/test/setup.ts`
 
 **Interfaces:**
-- Produces: `npm run dev`, `npm run test`, `npm run build`, and a React root mounted at `#root`.
+- Produces: `npm run dev`, `npm run test`, `npm run build`, and a Vinext route at `/`.
 
 - [ ] **Step 1: Create the package manifest and tool configuration**
 
 ```json
 {
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev": "vinext dev",
+    "build": "vinext build",
     "test": "vitest run",
     "test:watch": "vitest"
   }
@@ -53,17 +53,17 @@ Expected: Vitest starts and exits successfully with no test files before domain 
 - [ ] **Step 3: Commit the bootstrap**
 
 ```bash
-git add package.json package-lock.json tsconfig.json vite.config.ts index.html src/main.tsx src/test/setup.ts
+git add package.json package-lock.json tsconfig.json vite.config.ts app/layout.tsx app/page.tsx app/test/setup.ts
 git commit -m "chore: bootstrap SlotShield web app"
 ```
 
 ### Task 2: Implement the deterministic booking simulation with tests first
 
 **Files:**
-- Create: `src/domain/types.ts`
-- Create: `src/domain/scenarios.ts`
-- Create: `src/domain/bookingEngine.ts`
-- Create: `src/domain/bookingEngine.test.ts`
+- Create: `app/domain/types.ts`
+- Create: `app/domain/scenarios.ts`
+- Create: `app/domain/bookingEngine.ts`
+- Create: `app/domain/bookingEngine.test.ts`
 
 **Interfaces:**
 - Produces: `type ScenarioId = 'race' | 'expired-hold' | 'duplicate-callback' | 'timezone'`.
@@ -82,7 +82,7 @@ it('confirms only one booking when two requests claim the same slot', () => {
 
 - [ ] **Step 2: Run the test and verify the expected missing-module failure**
 
-Run: `npm run test -- src/domain/bookingEngine.test.ts`
+Run: `npm run test -- app/domain/bookingEngine.test.ts`
 
 Expected: FAIL because `runScenario` does not exist yet.
 
@@ -98,7 +98,7 @@ export function runScenario(id: ScenarioId): ScenarioReport {
 
 - [ ] **Step 4: Run the race test and verify it passes**
 
-Run: `npm run test -- src/domain/bookingEngine.test.ts`
+Run: `npm run test -- app/domain/bookingEngine.test.ts`
 
 Expected: PASS for the race-condition test.
 
@@ -114,24 +114,23 @@ expect(() => runScenario('bad-id' as ScenarioId)).toThrow('Unknown scenario: bad
 
 - [ ] **Step 6: Run all domain tests and commit**
 
-Run: `npm run test -- src/domain/bookingEngine.test.ts`
+Run: `npm run test -- app/domain/bookingEngine.test.ts`
 
 Expected: PASS with all six behavior tests.
 
 ```bash
-git add src/domain
+git add app/domain
 git commit -m "feat: add deterministic booking safety simulator"
 ```
 
 ### Task 3: Build accessible dashboard components
 
 **Files:**
-- Create: `src/components/ScenarioCard.tsx`
-- Create: `src/components/RunTimeline.tsx`
-- Create: `src/components/ReliabilityReport.tsx`
-- Create: `src/components/ScenarioCard.test.tsx`
-- Create: `src/App.tsx`
-- Modify: `src/main.tsx`
+- Create: `app/components/ScenarioCard.tsx`
+- Create: `app/components/RunTimeline.tsx`
+- Create: `app/components/ReliabilityReport.tsx`
+- Create: `app/components/ScenarioCard.test.tsx`
+- Modify: `app/page.tsx`
 
 **Interfaces:**
 - Consumes: `ScenarioDefinition`, `ScenarioReport`, and `runScenario()`.
@@ -150,7 +149,7 @@ it('selects the expired hold scenario when its card is activated', async () => {
 
 - [ ] **Step 2: Run the test and verify the expected missing-App failure**
 
-Run: `npm run test -- src/components/ScenarioCard.test.tsx`
+Run: `npm run test -- app/components/ScenarioCard.test.tsx`
 
 Expected: FAIL because the dashboard component does not exist yet.
 
@@ -163,7 +162,7 @@ const [report, setReport] = useState<ScenarioReport | null>(null);
 
 - [ ] **Step 4: Run the selection test and verify it passes**
 
-Run: `npm run test -- src/components/ScenarioCard.test.tsx`
+Run: `npm run test -- app/components/ScenarioCard.test.tsx`
 
 Expected: PASS.
 
@@ -181,16 +180,16 @@ Run: `npm run test`
 Expected: PASS with domain and component tests.
 
 ```bash
-git add src/App.tsx src/main.tsx src/components
+git add app/page.tsx app/components
 git commit -m "feat: add SlotShield simulation dashboard"
 ```
 
 ### Task 4: Create the responsive visual system and project documentation
 
 **Files:**
-- Create: `src/styles.css`
+- Modify: `app/globals.css`
 - Create: `README.md`
-- Modify: `src/main.tsx`
+- Modify: `app/layout.tsx`
 
 **Interfaces:**
 - Consumes: semantic class names from the dashboard components.
@@ -222,15 +221,15 @@ Run: `npm run test && npm run build`
 Expected: both commands exit 0.
 
 ```bash
-git add src/styles.css src/main.tsx README.md
+git add app/globals.css app/layout.tsx README.md
 git commit -m "docs: polish SlotShield interface and setup guide"
 ```
 
 ### Task 5: Verify the full user flow
 
 **Files:**
-- Verify: `src/domain/bookingEngine.test.ts`
-- Verify: `src/components/ScenarioCard.test.tsx`
+- Verify: `app/domain/bookingEngine.test.ts`
+- Verify: `app/components/ScenarioCard.test.tsx`
 - Verify: `README.md`
 
 **Interfaces:**
