@@ -1,8 +1,18 @@
 # SlotShield
 
-SlotShield is a visual booking-reliability simulator. Choose a high-risk booking edge case, replay a deterministic event trace, and inspect the guardrail that protects the final booking state.
+SlotShield is a public SaaS-style booking-reliability simulator. Choose a high-risk booking edge case, replay a deterministic event trace, and inspect the guardrail that protects the final booking state.
 
 ![SlotShield social preview](public/slotshield-og.png)
+
+## Public preview
+
+Open the live sandbox at [slotshield-lab.jatnabeegh.chatgpt.site](https://slotshield-lab.jatnabeegh.chatgpt.site). It is designed for a normal visitor or client to test immediately:
+
+1. Choose a failure mode or click `Try this scenario`.
+2. Read the fictional event trace as the guardrail handles the request.
+3. Inspect the reliability score, final state, and recommendation.
+
+No account, data upload, payment field, or setup is required.
 
 ## What it demonstrates
 
@@ -31,6 +41,10 @@ npm run dev
 
 Open the local address printed by the development server.
 
+## Product boundaries
+
+SlotShield is a rehearsal workspace, not a booking service. It deliberately has no sign-in flow, customer database, payment provider, calendar, webhook endpoint, analytics tracker, or production booking action. The public preview uses the same deterministic data as the local build.
+
 ## Verify it
 
 ```bash
@@ -39,20 +53,17 @@ npm run lint
 npm run test:site
 ```
 
-The test suite covers each deterministic scenario, scenario selection, and the reliability-report interaction. The site test builds the worker and checks its server-rendered HTML.
-
-## Scope of v1
-
-SlotShield uses synthetic scenario data only. It does not create appointments, store patient records, call payment providers, process webhooks, or connect to calendars. That boundary makes the project safe to share as a public GitHub demo.
+The test suite covers each deterministic scenario, scenario selection, public access, clipboard fallback, and the reliability-report interaction. The site test builds the worker and checks its server-rendered SaaS copy.
 
 ## Project structure
 
 ```text
-app/domain/        deterministic scenario data and booking engine
-app/page.tsx       interactive simulator dashboard
-app/page.test.tsx  browser-style interaction coverage
-tests/             server-rendered site verification
-public/            social preview asset
+app/domain/               deterministic scenario data and booking engine
+app/components/           public access, slot rail, picker, trace, and report UI
+app/page.tsx              interactive SaaS workspace composition
+app/page.test.tsx         browser-style interaction coverage
+tests/                    server-rendered site verification
+public/                   social preview asset
 ```
 
 ## Stack
