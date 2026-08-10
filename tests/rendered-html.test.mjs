@@ -38,6 +38,10 @@ test("server-renders the SlotShield SaaS observatory", async () => {
   assert.match(html, /10:15/i);
   assert.match(html, /Double-booking race/i);
   assert.match(html, /Try this scenario/i);
+  assert.match(html, /Test your website/i);
+  assert.match(html, /Website URL/i);
+  assert.match(html, /Check site/i);
+  assert.match(html, /No login.*No booking actions.*No patient data/i);
   assert.doesNotMatch(html, /Your site is taking shape/i);
   assert.doesNotMatch(html, /codex-preview/i);
 });
