@@ -263,4 +263,19 @@ describe("SlotShield dashboard", () => {
     expect(screen.getByText(/private booking behavior was not tested/i)).toBeVisible();
     expect(screen.getByRole("heading", { name: /next action/i })).toBeVisible();
   });
+
+  it("frames fictional modes as reliability rehearsals", async () => {
+    const user = userEvent.setup();
+    render(<Home />);
+
+    expect(screen.getByRole("heading", { name: /rehearse a failure/i })).toBeVisible();
+    expect(screen.getByText(/run deterministic failure scenarios locally/i)).toBeVisible();
+    expect(screen.getByText("Selected risk")).toBeVisible();
+    expect(screen.getByText("Trigger")).toBeVisible();
+    expect(screen.getByText("Expected protection")).toBeVisible();
+
+    await user.click(screen.getByRole("button", { name: /try this scenario/i }));
+
+    expect(screen.getByText("Final state")).toBeVisible();
+  });
 });

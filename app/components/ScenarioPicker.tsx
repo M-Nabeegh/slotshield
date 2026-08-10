@@ -9,22 +9,25 @@ export function ScenarioPicker({
   selectedId: ScenarioId;
 }) {
   return (
-    <div className="scenario-grid" role="list" aria-label="Reliability scenarios">
+    <ul className="scenario-list" aria-label="Reliability scenarios">
       {scenarios.map((scenario, index) => (
-        <button
-          className={`scenario-card ${scenario.id === selectedId ? "is-selected" : ""}`}
-          type="button"
-          key={scenario.id}
-          aria-pressed={scenario.id === selectedId}
-          onClick={() => onSelect(scenario.id)}
-        >
-          <span className="scenario-index">0{index + 1}</span>
-          <span className="scenario-category">{scenario.category}</span>
-          <strong>{scenario.title}</strong>
-          <span className="scenario-description">{scenario.description}</span>
-          <span className="scenario-open" aria-hidden="true">↗</span>
-        </button>
+        <li key={scenario.id}>
+          <button
+            className={`scenario-row ${scenario.id === selectedId ? "is-selected" : ""}`}
+            type="button"
+            aria-pressed={scenario.id === selectedId}
+            onClick={() => onSelect(scenario.id)}
+          >
+            <span className="scenario-index">0{index + 1}</span>
+            <span className="scenario-row-copy">
+              <span className="scenario-category">{scenario.category}</span>
+              <strong>{scenario.title}</strong>
+              <span className="scenario-description">{scenario.description}</span>
+            </span>
+            <span className="scenario-open" aria-hidden="true">↗</span>
+          </button>
+        </li>
       ))}
-    </div>
+    </ul>
   );
 }

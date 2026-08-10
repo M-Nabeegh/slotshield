@@ -17,10 +17,10 @@ export function ReliabilityReport({
     <section className="report-section content-width" aria-labelledby="report-heading" aria-live="polite">
       <div className="report-heading">
         <div>
-          <p className="eyebrow">Simulation result</p>
+          <p className="studio-kicker">Rehearsal result</p>
           <h2 id="report-heading">Reliability report</h2>
         </div>
-        <p>One rule is doing the work. The trace shows exactly where it protected the slot.</p>
+        <p>The trace shows where the guardrail protected the slot and what the final state contains.</p>
       </div>
 
       <div className="report-grid">

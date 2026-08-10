@@ -27,11 +27,15 @@ export function ScenarioBriefing({
       <p className="briefing-description">{scenario.description}</p>
       <dl className="briefing-list">
         <div>
-          <dt>Risk</dt>
+          <dt>Selected risk</dt>
           <dd>{scenario.risk}</dd>
         </div>
         <div>
-          <dt>Protection</dt>
+          <dt>Trigger</dt>
+          <dd>{scenario.description}</dd>
+        </div>
+        <div>
+          <dt>Expected protection</dt>
           <dd>{scenario.protection}</dd>
         </div>
       </dl>

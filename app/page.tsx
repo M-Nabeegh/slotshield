@@ -50,10 +50,10 @@ export default function Home() {
       <section className="failure-section content-width" id="failure-modes" aria-labelledby="failure-heading">
         <div className="section-heading">
           <div>
-            <p className="eyebrow">Choose a stress test</p>
-            <h2 id="failure-heading">The failures that quietly break trust.</h2>
+            <p className="studio-kicker">Reliability rehearsal</p>
+            <h2 id="failure-heading">Rehearse a failure</h2>
           </div>
-          <p>Pick one. SlotShield explains the guardrail, then plays the outcome as a deterministic trace.</p>
+          <p>Run deterministic failure scenarios locally to see how SlotShield detects and contains reliability problems.</p>
         </div>
 
         <ScenarioPicker onSelect={selectScenario} selectedId={selectedId} />
@@ -61,8 +61,8 @@ export default function Home() {
 
       <section className="workbench content-width" id="simulation" aria-labelledby="workbench-heading">
         <div className="workbench-intro">
-          <p className="eyebrow">Scenario workbench</p>
-          <p id="workbench-heading">Everything below is a replayable, fake-data simulation.</p>
+          <p className="studio-kicker">Reliability workbench</p>
+          <p id="workbench-heading">Selected risk → event trace → protection → final state.</p>
         </div>
 
         <div className="workbench-grid">
