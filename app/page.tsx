@@ -7,7 +7,7 @@ import { ScenarioPicker } from "./components/ScenarioPicker";
 import { ReliabilityReport } from "./components/ReliabilityReport";
 import { SimulationTimeline } from "./components/SimulationTimeline";
 import { SlotShieldMark } from "./components/SlotShieldMark";
-import { SlotRail } from "./components/SlotRail";
+import { HowItWorks } from "./components/HowItWorks";
 import { runScenario } from "./domain/bookingEngine";
 import { scenarios } from "./domain/scenarios";
 import type { ScenarioId } from "./domain/types";
@@ -44,40 +44,8 @@ export default function Home() {
         <PublicAccessBar shareUrl={PUBLIC_PREVIEW_URL} />
       </nav>
 
-      <section className="hero content-width" id="top" aria-labelledby="hero-title">
-        <div className="hero-copy">
-          <p className="eyebrow">Booking reliability lab / Public simulator</p>
-          <h1 id="hero-title">
-            Rehearse the moment
-            <span>booking trust breaks.</span>
-          </h1>
-          <p className="hero-description">
-            SlotShield turns the edge cases behind appointment booking into a
-            deterministic trace your team can understand before customers feel it.
-          </p>
-          <div className="hero-actions">
-            <button
-              className="button button-primary"
-              type="button"
-              onClick={() => setHasRun(true)}
-            >
-              Try this scenario
-              <span aria-hidden="true">→</span>
-            </button>
-            <a className="button button-quiet" href="#failure-modes">
-              Browse scenarios
-            </a>
-          </div>
-          <div className="hero-trust" aria-label="Sandbox guarantees">
-            <span>Synthetic data</span>
-            <span>No sign-in needed</span>
-            <span>No integrations</span>
-          </div>
-        </div>
-        <SlotRail hasRun={hasRun} selectedId={selectedId} />
-      </section>
-
       <WebsiteAuditPanel onTryScenario={() => setHasRun(true)} />
+      <HowItWorks />
 
       <section className="failure-section content-width" id="failure-modes" aria-labelledby="failure-heading">
         <div className="section-heading">

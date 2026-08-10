@@ -39,7 +39,7 @@ describe("SlotShield dashboard", () => {
 
     expect(screen.getByText(/public preview/i)).toBeVisible();
     expect(screen.getByText(PUBLIC_PREVIEW_URL)).toBeVisible();
-    expect(screen.getAllByText(/no sign-in needed/i)).toHaveLength(2);
+    expect(screen.getByText(/no sign-in needed/i)).toBeVisible();
   });
 
   it("copies the public URL and confirms the action", async () => {
@@ -112,10 +112,10 @@ describe("SlotShield dashboard", () => {
     render(<Home />);
 
     expect(
-      screen.getByRole("heading", { name: /test your website/i }),
+      screen.getByRole("heading", { name: /find the booking failures/i }),
     ).toBeVisible();
     expect(
-      screen.getByRole("textbox", { name: /website url/i }),
+      screen.getByRole("textbox", { name: /public appointment url/i }),
     ).toBeVisible();
     expect(
       screen.getByRole("button", { name: /check site/i }),
@@ -153,7 +153,7 @@ describe("SlotShield dashboard", () => {
     const user = userEvent.setup();
     render(<Home />);
     await user.type(
-      screen.getByRole("textbox", { name: /website url/i }),
+      screen.getByRole("textbox", { name: /public appointment url/i }),
       "https://clinic.example.com",
     );
     await user.click(screen.getByRole("button", { name: /check site/i }));
@@ -172,7 +172,7 @@ describe("SlotShield dashboard", () => {
     const user = userEvent.setup();
     render(<Home />);
     await user.type(
-      screen.getByRole("textbox", { name: /website url/i }),
+      screen.getByRole("textbox", { name: /public appointment url/i }),
       "https://clinic.example.com",
     );
     await user.click(screen.getByRole("button", { name: /check site/i }));

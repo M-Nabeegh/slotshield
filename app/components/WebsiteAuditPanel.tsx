@@ -5,17 +5,17 @@ import type { ScenarioId } from "../domain/types";
 import type { StagingAuditResult } from "../lib/stagingContract";
 import { SUPPORTED_SCENARIO_IDS } from "../lib/stagingContract";
 import type { WebsiteCheckResult } from "../lib/websiteAudit";
+import { ProductHero, type ProductCheckState } from "./ProductHero";
 
 interface WebsiteAuditPanelProps {
   onTryScenario: () => void;
 }
 
-type PublicCheckState = "idle" | "checking" | "success" | "error";
 type StagingCheckState = "idle" | "checking" | "success" | "error";
 
 export function WebsiteAuditPanel({ onTryScenario }: WebsiteAuditPanelProps) {
   const [websiteUrl, setWebsiteUrl] = useState("");
-  const [publicState, setPublicState] = useState<PublicCheckState>("idle");
+  const [publicState, setPublicState] = useState<ProductCheckState>("idle");
   const [publicResult, setPublicResult] = useState<WebsiteCheckResult | null>(null);
   const [publicError, setPublicError] = useState("");
   const [stagingOpen, setStagingOpen] = useState(false);
@@ -112,45 +112,19 @@ export function WebsiteAuditPanel({ onTryScenario }: WebsiteAuditPanelProps) {
     <section
       className="website-audit content-width"
       id="website-audit"
-      aria-labelledby="website-audit-title"
+      aria-label="SlotShield public check"
     >
-      <div className="website-audit-heading">
-        <div>
-          <p className="eyebrow">Public surface check</p>
-          <h2 id="website-audit-title">Test your website</h2>
-        </div>
-        <p>
-          Paste the appointment URL. SlotShield checks what a visitor can reach
-          before you connect a test system.
-        </p>
-      </div>
+      <ProductHero
+        websiteUrl={websiteUrl}
+        publicState={publicState}
+        stagingOpen={stagingOpen}
+        onWebsiteUrlChange={setWebsiteUrl}
+        onSubmit={checkWebsite}
+        onOpenStaging={() => setStagingOpen(true)}
+        onTryScenario={onTryScenario}
+      />
 
       <div className="website-audit-card">
-        <form className="website-check-form" onSubmit={checkWebsite}>
-          <label htmlFor="website-url">Website URL</label>
-          <div className="website-check-row">
-            <input
-              id="website-url"
-              name="website-url"
-              type="url"
-              inputMode="url"
-              autoComplete="url"
-              placeholder="https://your-clinic.com"
-              value={websiteUrl}
-              onChange={(event) => setWebsiteUrl(event.target.value)}
-              aria-describedby="website-url-help"
-              required
-            />
-            <button className="button button-primary" type="submit" disabled={publicState === "checking"}>
-              {publicState === "checking" ? "Checking…" : "Check site"}
-              <span aria-hidden="true">→</span>
-            </button>
-          </div>
-          <p className="website-audit-help" id="website-url-help">
-            No login · No booking actions · No patient data
-          </p>
-        </form>
-
         {publicState === "error" ? (
           <div className="website-audit-message is-error" role="alert">
             <strong>Public check stopped</strong>

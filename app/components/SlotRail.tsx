@@ -3,14 +3,16 @@ import type { ScenarioId } from "../domain/types";
 export function SlotRail({
   hasRun,
   selectedId,
+  compact = false,
 }: {
   hasRun: boolean;
   selectedId: ScenarioId;
+  compact?: boolean;
 }) {
   const incomingLabel = selectedId === "race" ? "Request B" : "Incoming request";
 
   return (
-    <aside className={`slot-rail-card${hasRun ? " is-live" : ""}`} aria-label="10:15 booking slot rail">
+    <aside className={`slot-rail-card${hasRun ? " is-live" : ""}${compact ? " is-compact" : ""}`} aria-label="10:15 booking slot rail">
       <div className="slot-rail-heading">
         <div>
           <p className="eyebrow">Live slot rail</p>
