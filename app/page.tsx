@@ -88,6 +88,7 @@ export default function Home() {
       <footer className="footer content-width">
         <span className="brand footer-brand"><SlotShieldMark compact />SlotShield</span>
         <p>Designed as a reliability rehearsal, with no real booking actions.</p>
+        <p className="footer-credit">Designed and engineered by Muhammad Nabeegh</p>
         <a href="#top">Back to top ↑</a>
       </footer>
     </main>
