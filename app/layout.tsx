@@ -13,11 +13,22 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Starter Project",
-  description: "A clean starting point for building your site.",
+  title: "SlotShield | Booking Reliability Simulator",
+  description: "Rehearse booking failure modes before they reach customers.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
+  },
+  openGraph: {
+    title: "SlotShield | Booking Reliability Simulator",
+    description: "Catch booking failures before customers do.",
+    images: ["/slotshield-og.png"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SlotShield | Booking Reliability Simulator",
+    description: "Catch booking failures before customers do.",
+    images: ["/slotshield-og.png"],
   },
 };
 
@@ -28,11 +39,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-      </body>
+      <body className={`${geistSans.variable} ${geistMono.variable}`}>{children}</body>
     </html>
   );
 }

@@ -8,6 +8,15 @@ export type Severity = "critical" | "high" | "medium";
 
 export type EventOutcome = "received" | "accepted" | "rejected" | "ignored";
 
+export interface ScenarioDefinition {
+  id: ScenarioId;
+  category: string;
+  title: string;
+  description: string;
+  risk: string;
+  protection: string;
+}
+
 export interface SimulationEvent {
   order: number;
   time: string;
