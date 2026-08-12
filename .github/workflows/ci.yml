@@ -1,0 +1,36 @@
+name: SlotShield quality gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # `npm install` (not `npm ci`) so the Linux runner resolves its own
+      # platform-specific optional binaries, which a macOS-authored lockfile omits.
+      - name: Install dependencies
+        run: npm install
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm run test
+
+      - name: Build static preview
+        run: npm run build:pages
