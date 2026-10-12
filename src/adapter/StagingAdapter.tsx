@@ -182,7 +182,7 @@ export function StagingAdapter() {
           <pre className="code-block">GET /.well-known/slotshield-test.json</pre>
           <pre className="code-block">{manifest}</pre>
           <pre className="code-block">{runRequest}</pre>
-          <a href="https://github.com/M-Nabeegh/slotshield/blob/main/docs/test-adapter-contract.md" target="_blank" rel="noreferrer noopener">
+          <a href="https://gitlab.com/M-Nabeegh/slotshield/-/blob/rebuild/docs/test-adapter-contract.md" target="_blank" rel="noreferrer noopener">
             Full contract and response shape
           </a>
         </section>

@@ -53,7 +53,7 @@ export function App() {
           ))}
         </nav>
         <div className="topbar-end">
-          <a href="https://github.com/M-Nabeegh/slotshield" target="_blank" rel="noreferrer noopener">
+          <a href="https://gitlab.com/M-Nabeegh/slotshield" target="_blank" rel="noreferrer noopener">
             Source
           </a>
         </div>

@@ -9,7 +9,7 @@ Turn the unique slot constraint off and two patients land in the same chair. Lea
   <img src="docs/lab-light.png" alt="The SlotShield lab after a Monday rush run: a triple-booked 09:00 slot, an expired hold blocking 11:30, a patient charged three times, and suggested fixes." width="900" />
 </picture>
 
-[Open the live demo](https://m-nabeegh.github.io/slotshield/) · [Staging adapter contract](docs/test-adapter-contract.md)
+[Open the live demo](https://m-nabeegh.gitlab.io/slotshield/) · [Staging adapter contract](docs/test-adapter-contract.md)
 
 ## How it works
 
@@ -37,7 +37,7 @@ After a run you can:
 
 **Staging** runs the same four scenarios against your own staging API through two test-only endpoints. The manifest has to declare `testOnly: true`, every run gets its own namespace, and the token is used once and never stored. See the [adapter contract](docs/test-adapter-contract.md).
 
-Both need the small server built into the dev and preview servers. The GitHub Pages build is static, so there the lab works fully and these two pages explain how to run them locally.
+Both need the small server built into the dev and preview servers. The GitLab Pages build is static, so there the lab works fully and these two pages explain how to run them locally.
 
 ## Run it
 
@@ -52,7 +52,7 @@ npm run dev
 npm test             # engine, share links, UI interactions, API handlers
 npm run lint
 npm run build        # app with API routes (vite preview serves them)
-npm run build:pages  # static build for GitHub Pages
+npm run build:pages  # static build for GitLab Pages
 ```
 
 ## Project layout

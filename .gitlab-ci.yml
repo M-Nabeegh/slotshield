@@ -1,0 +1,17 @@
+# Builds the static demo and publishes it to GitLab Pages at /slotshield/.
+pages:
+  image: node:22
+  variables:
+    VITE_STATIC_DEMO: "1"
+  cache:
+    key:
+      files: [package-lock.json]
+    paths: [.npm/]
+  script:
+    - npm ci --cache .npm --prefer-offline
+    - npm run build:pages
+    - rm -rf public && mv dist/pages public
+  artifacts:
+    paths: [public]
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
