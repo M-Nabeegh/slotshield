@@ -1,100 +1,45 @@
-<div align="center">
-
-<img src="public/slotshield-og.png" alt="SlotShield reliability studio preview" width="760" />
-
 # SlotShield
 
-### Catch booking failures before your customers do.
+SlotShield sends realistic traffic through a model of a clinic's booking API and shows you, appointment by appointment, what goes wrong when a guardrail is missing.
 
-An account-free Reliability Studio for finding fragile booking flows, explaining what a public check can actually prove, and rehearsing failure modes safely.
+Turn the unique slot constraint off and two patients land in the same chair. Leave stale holds alone and an abandoned checkout keeps a free slot blocked for good. Process webhook retries twice and someone pays their deposit twice. Read a browser's timestamp at face value and a patient in Dubai turns up an hour early.
 
-<p>
-<a href="https://github.com/M-Nabeegh/slotshield/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/M-Nabeegh/slotshield/ci.yml?label=quality%20gate&logo=github" alt="Quality gate" /></a>
-<img src="https://img.shields.io/badge/demo-account--free-0f6f52" alt="Account free" />
-<img src="https://img.shields.io/badge/checks-read--only-0f6f52" alt="Read-only checks" />
-<a href="https://github.com/M-Nabeegh/slotshield/blob/main/LICENSE"><img src="https://img.shields.io/github/license/M-Nabeegh/slotshield" alt="License" /></a>
-</p>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/lab-dark.png" />
+  <img src="docs/lab-light.png" alt="The SlotShield lab after a Monday rush run: a triple-booked 09:00 slot, an expired hold blocking 11:30, a patient charged three times, and suggested fixes." width="900" />
+</picture>
 
-<a href="https://m-nabeegh.github.io/slotshield/">Open the live demo ↗</a> · <a href="docs/test-adapter-contract.md">Read the adapter contract</a>
+[Open the live demo](https://m-nabeegh.github.io/slotshield/) · [Staging adapter contract](docs/test-adapter-contract.md)
 
-</div>
+## How it works
 
-<br />
+The lab is a small discrete-event simulation (`src/engine`). Every booking request reads availability, waits a few milliseconds, then writes, the way a real API handler does. Each guardrail changes one real decision point. Nothing is scripted, so the outcome comes from the model itself:
 
-## Why this exists
-
-Appointment software can look healthy while quietly losing slots, accepting a
-duplicate callback, or showing the wrong time zone. SlotShield turns those
-risks into a small, inspectable workflow:
-
-| 01 · Inspect | 02 · Separate | 03 · Rehearse |
+| Guardrail | Decision it changes | Without it |
 | --- | --- | --- |
-| Check the public appointment surface from a normal browser request. | Make the boundary between observed evidence and unverified backend behavior explicit. | Run deterministic, synthetic failure scenarios before connecting a real system. |
+| Unique slot constraint | The database checks for an active booking at write time | Requests whose reads overlap both succeed |
+| Expire stale holds | Lapsed payment holds are released before availability is read | Abandoned checkouts block open slots |
+| Idempotent webhooks | Payment event IDs are recorded and repeats skipped | Each provider retry captures the deposit again |
+| Explicit time zones | Submitted times are read as clinic time (Asia/Karachi) | The browser's offset shifts or voids the appointment |
 
-The result is intentionally more useful than a green check: every run ends in
-evidence, a limitation, and a next action.
+There are five kinds of traffic. Four focus on one failure each; **Monday rush** sends thirty patients over half an hour from a seeded generator, so a given traffic number always replays identically.
 
-## The product flow
+After a run you can:
 
-1. **Paste a public appointment link.** No sign-in, account creation,
-   upload, payment field, or customer data is required.
-2. **Review the public check.** SlotShield records HTTPS, the final URL, HTTP
-   status, response timing, page title, content type, and same-origin booking
-   links such as `Book`, `Appointments`, or `Schedule`.
-3. **Choose a deeper rehearsal.** Pick a fictional scenario locally or point a
-   test-only staging adapter at an isolated environment.
-4. **Read the report.** The report separates what was observed from what still
-   needs a staging or production review.
+- step through every request, write, and webhook on a replay scrubber, with incidents marked
+- see who was affected and which guardrail would have prevented each incident, with the SQL or code change
+- switch that guardrail on and run again in one click, then compare runs side by side in the history
+- copy a link that reopens the exact setup, or a Markdown report for a ticket
 
-## Evidence boundary
+## Page check and staging adapter
 
-The public check is deliberately bounded. It can show that a page is reachable
-and expose useful booking-surface signals; it cannot prove private scheduling
-logic, concurrency behavior, authentication, payment handling, webhooks, or
-database invariants.
+**Page check** fetches a public booking page once, with a 5 second timeout, a 128 KB cap and at most two redirects. It reports reachability, HTTPS, timing, and same-site links that look like booking pages. It refuses private and local addresses and never submits anything.
 
-Every request uses a short timeout, a bounded response size, a small redirect
-limit, and a shallow same-origin discovery pass. SlotShield never submits a
-booking, payment, cancellation, webhook, or other mutation request.
+**Staging** runs the same four scenarios against your own staging API through two test-only endpoints. The manifest has to declare `testOnly: true`, every run gets its own namespace, and the token is used once and never stored. See the [adapter contract](docs/test-adapter-contract.md).
 
-> A reachable booking page is a starting point for reliability work, not a
-> production certification.
+Both need the small server built into the dev and preview servers. The GitHub Pages build is static, so there the lab works fully and these two pages explain how to run them locally.
 
-## Test-only staging adapter
-
-The **Audit a staging flow** path accepts a client-owned HTTPS test URL and a
-temporary token. The adapter contract is intentionally narrow:
-
-```text
-GET  /.well-known/slotshield-test.json
-POST /.well-known/slotshield-test/run
-```
-
-The manifest must declare `contractVersion: 1`, supported scenario IDs, and
-`testOnly: true`. Runs use synthetic identifiers and an isolated test
-namespace. SlotShield clears a token after a successful run, excludes it from
-the evidence report, and refuses to fall back to production when the contract
-is missing or invalid.
-
-See the complete request and response shape in the
-[staging adapter contract](docs/test-adapter-contract.md).
-
-## Fictional reliability rehearsals
-
-The simulator is deterministic and local. It does not pretend to be connected
-to a clinic, calendar, payment provider, or customer database.
-
-| Scenario | Failure being rehearsed | Guardrail shown |
-| --- | --- | --- |
-| Double-booking race | Two requests claim one slot within milliseconds. | Unique active-slot constraint. |
-| Expired payment hold | A pending payment keeps a slot unavailable after its window ends. | Stale-hold cleanup before availability checks. |
-| Duplicate payment callback | A provider retries a completed payment event. | Persisted provider-event idempotency key. |
-| Time-zone mismatch | A local time does not map to the clinic schedule. | IANA time-zone normalization before validation. |
-
-Each rehearsal ends with an event trace, a final booking state, and a concrete
-recommendation. The data is fictional, repeatable, and safe to inspect.
-
-## Run it locally
+## Run it
 
 Requires Node.js 22.13 or newer.
 
@@ -103,65 +48,24 @@ npm install
 npm run dev
 ```
 
-The [GitHub Pages demo](https://m-nabeegh.github.io/slotshield/) is a static,
-account-free showcase of the fictional reliability rehearsals. Its public URL
-check uses synthetic evidence because GitHub Pages cannot run SlotShield's
-server routes. Run the app locally (below) for live public-surface checks and
-the test-only staging adapter.
-
-The app is a client-side React workspace with two bounded API routes:
-
-```text
-app/api/website-check   public URL inspection
-app/api/staging-audit   opt-in test-only adapter call
-```
-
-No sign-in flow, customer database, payment provider, calendar, analytics
-tracker, or production booking action is configured. The handlers do not store
-client URLs, tokens, request bodies, or reports.
-
-## Verify it
-
 ```bash
-npm run test       # unit and interaction coverage
-npm run lint       # ESLint
-npm run test:site  # production build + server-rendered HTML check
-npm run build:pages # static GitHub Pages artifact
+npm test             # engine, share links, UI interactions, API handlers
+npm run lint
+npm run build        # app with API routes (vite preview serves them)
+npm run build:pages  # static build for GitHub Pages
 ```
 
-The suite covers the deterministic booking engine, all four scenarios, public
-URL safety, evidence and limit copy, blocked and network-error states, staging
-token privacy, keyboard focus preservation, responsive controls, the
-reliability report, and server-rendered product copy.
-
-## Project map
+## Project layout
 
 ```text
-app/components/       Reliability Studio UI, audit states, trace, and report
-app/domain/            Deterministic scenario definitions and booking engine
-app/lib/               URL safety, page signals, preview URL, adapter contract
-app/api/                Bounded public-check and staging-audit route handlers
-app/page.tsx           Interactive workspace composition
-app/page.test.tsx      Testing Library interaction and accessibility coverage
-tests/                 Server-rendered site verification
-docs/                  Test adapter contract
-public/                Social preview and favicon assets
+src/engine/    simulation, scenarios, seeded traffic, guardrail definitions
+src/lab/       schedule, replay, event log, outcome, history, share links
+src/check/     public page check
+src/adapter/   staging adapter runner
+server/        URL safety, page inspection, adapter contract, Vite middleware
+docs/          adapter contract and screenshots
 ```
 
-## Design direction
+Harbor Street Dental and its patients are fictional. No real bookings, payments, or patient data are involved.
 
-SlotShield uses a restrained paper, graphite, and deep-emerald system with a
-single accent, layered depth, and consistent radii rather than a generic
-dashboard template. The hierarchy is built from readable evidence, restrained
-status labels, and a trace that makes the chain visible:
-
-`risk → event → protection → final state`
-
-The visual system is responsive from a narrow phone viewport to a wide desktop
-workbench, with no account wall between a curious employer and the product.
-
-<div align="center">
-
-**Designed and engineered by Muhammad Nabeegh.**
-
-</div>
+Built by Muhammad Nabeegh.
