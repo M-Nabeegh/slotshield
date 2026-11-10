@@ -75,6 +75,56 @@ describe("patients abroad", () => {
   });
 });
 
+describe("after the clocks change", () => {
+  it("moves appointments by the hour a stale profile offset is off", () => {
+    const run = simulate("clock-change", allOff);
+    const farhan = run.snapshots.at(-1)!.find((booking) => booking.customer === "Farhan Y.");
+    const rabia = run.snapshots.at(-1)!.find((booking) => booking.customer === "Rabia G.");
+    // London fell back an hour, Sydney sprang forward.
+    expect(farhan).toMatchObject({ slot: 540, intendedSlot: 600 });
+    expect(rabia).toMatchObject({ slot: 750, intendedSlot: 690 });
+    expect(run.summary.byType["wrong-time"]).toBe(2);
+    // New York lands on 08:00, before the clinic opens; Taha finds 09:00 taken by Farhan.
+    expect(run.summary.byType["turned-away"]).toBe(2);
+    expect(run.summary.byCause["tz-normalize"]).toBe(4);
+  });
+
+  it("ignores the saved offset when times are read as clinic time", () => {
+    const run = simulate("clock-change", only("tz-normalize"));
+    expect(totalIncidents(run.summary)).toBe(0);
+    expect(run.summary.confirmed).toBe(4);
+  });
+});
+
+describe("cancellation and waitlist", () => {
+  it("lets the fastest tap beat the longest wait, and overlapping claims double-book", () => {
+    const run = simulate("waitlist", allOff);
+    expect(run.summary.byType["passed-over"]).toBe(1);
+    expect(run.summary.byType["double-booking"]).toBe(1);
+    const halfTen = run.snapshots.at(-1)!.find(
+      (booking) => slotKey(booking.provider, booking.slot) === "amin@630" && booking.status === "confirmed",
+    );
+    expect(halfTen?.customer).toBe("Yasir U.");
+    expect(run.events.some((event) => event.message.includes("Laiba O. was ahead in line"))).toBe(true);
+  });
+
+  it("still passes the first patient over when only the unique constraint is on", () => {
+    const run = simulate("waitlist", only("slot-lock"));
+    expect(run.summary.byType["double-booking"]).toBe(0);
+    expect(run.summary.byType["passed-over"]).toBe(1);
+    // Adeel loses 09:45 to Sadia, who really was ahead of him.
+    expect(run.events.some((event) => event.message.includes("ahead of Adeel S. on the waitlist"))).toBe(true);
+  });
+
+  it("hands each freed slot to the first patient in line", () => {
+    const run = simulate("waitlist", only("waitlist-claim"));
+    expect(totalIncidents(run.summary)).toBe(0);
+    const final = run.snapshots.at(-1)!.filter((booking) => booking.status === "confirmed");
+    expect(final.map((booking) => booking.customer).sort()).toEqual(["Hiba K.", "Laiba O.", "Sadia R."]);
+    expect(run.events.filter((event) => event.actor === "Waitlist notifier")).toHaveLength(0);
+  });
+});
+
 describe("every scenario", () => {
   it.each(scenarios.map((scenario) => scenario.id))("%s is clean with all guardrails on", (id: ScenarioId) => {
     const run = simulate(id, allOn, 8);
@@ -106,9 +156,11 @@ describe("rush hour traffic", () => {
     expect(simulate("rush-hour", allOff, 42).requests).not.toEqual(simulate("rush-hour", allOff, 43).requests);
   });
 
-  it("exercises all four failure types with the default seed", () => {
+  it("exercises the four booking and payment failures with the default seed", () => {
     const { byType } = simulate("rush-hour", allOff, 8).summary;
-    expect(Object.values(byType).every((count) => count > 0)).toBe(true);
+    for (const type of ["double-booking", "turned-away", "charged-twice", "wrong-time"] as const) {
+      expect(byType[type]).toBeGreaterThan(0);
+    }
   });
 
   it("attributes every incident to a guardrail that was off", () => {

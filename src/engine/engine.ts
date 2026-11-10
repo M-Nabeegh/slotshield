@@ -23,9 +23,10 @@ import type {
 
 type Step =
   | { kind: "arrive"; request: BookingRequest }
-  | { kind: "read"; request: BookingRequest; slot: number }
-  | { kind: "write"; request: BookingRequest; slot: number }
+  | { kind: "read"; request: BookingRequest; slot: number; claim?: boolean }
+  | { kind: "write"; request: BookingRequest; slot: number; claim?: boolean }
   | { kind: "abandon"; request: BookingRequest }
+  | { kind: "cancel"; request: BookingRequest }
   | { kind: "webhook"; request: BookingRequest; eventId: string; delivery: number };
 
 interface Queued {
@@ -36,6 +37,7 @@ interface Queued {
 
 const DEFAULT_READ_MS = 4;
 const DEFAULT_WRITE_MS = 6;
+const DEFAULT_CLAIM_MS = 20_000;
 
 /**
  * Runs one scenario against a model of a clinic booking API.
@@ -57,6 +59,10 @@ export function simulate(
   const events: SimEvent[] = [];
   const snapshots: Booking[][] = [];
   const processedEvents = new Set<string>();
+  /** Patients waiting for a taken slot, oldest first. */
+  const waitlists = new Map<string, BookingRequest[]>();
+  /** Where each notified patient stood in line; lower waited longer. */
+  const linePosition = new Map<string, number>();
   let seq = 0;
   let refunds = 0;
   let correctlyRefused = 0;
@@ -111,6 +117,44 @@ export function simulate(
     }
   };
 
+  /** A notified waitlist patient finds the freed slot already gone. */
+  const refuseClaim = (
+    t: number,
+    actor: string,
+    request: BookingRequest,
+    holder: Booking,
+    slot: number,
+  ) => {
+    const who = request.customer;
+    const mine = linePosition.get(request.id) ?? 0;
+    const theirs = linePosition.get(holder.requestId);
+    if (theirs !== undefined && theirs < mine) {
+      correctlyRefused += 1;
+      emit(
+        t,
+        actor,
+        `${formatSlot(slot)} went to ${holder.customer}, who was ahead of ${who} on the waitlist.`,
+        "rejected",
+        { slot: [request.provider, slot], customer: who },
+      );
+      return;
+    }
+    const reason = theirs === undefined
+      ? "who was never on the waitlist"
+      : `who joined the waitlist after ${who}`;
+    emit(
+      t,
+      actor,
+      `${formatSlot(slot)} already went to ${holder.customer}, ${reason}. ${who} was ahead in line and is passed over.`,
+      "incident",
+      {
+        slot: [request.provider, slot],
+        customer: who,
+        incidents: [{ type: "passed-over", cause: "waitlist-claim", customer: who }],
+      },
+    );
+  };
+
   for (const request of requests) {
     schedule(request.at, { kind: "arrive", request });
   }
@@ -130,8 +174,12 @@ export function simulate(
 
       if (abroad) {
         message += ` from ${request.clientCity} (${formatOffset(offset)})`;
+        const saved = request.profileOffsetMin;
         if (guardrails["tz-normalize"]) {
           message += `. The API reads it as clinic time: ${formatSlot(slot)}.`;
+        } else if (saved !== undefined && saved !== offset) {
+          slot = request.slot + (offset - saved);
+          message += `. Their profile still says ${formatOffset(saved)} from before the clocks changed, so the API stores ${formatSlot(slot)} clinic time.`;
         } else {
           slot = request.slot + (clinic.utcOffsetMin - offset);
           message += `. The browser sends ${formatSlot(request.slot)}${isoOffset(offset)}, which the API stores as ${formatSlot(slot)} clinic time.`;
@@ -207,6 +255,21 @@ export function simulate(
               incidents: [{ type: "turned-away", cause: "tz-normalize", customer: who }],
             },
           );
+        } else if (step.claim) {
+          refuseClaim(t, "Booking API", request, holder, slot);
+        } else if (request.waitlist) {
+          const key = slotKey(request.provider, slot);
+          const line = waitlists.get(key) ?? [];
+          line.push(request);
+          waitlists.set(key, line);
+          correctlyRefused += 1;
+          emit(
+            t,
+            "Booking API",
+            `${formatSlot(slot)} is already booked. ${who} joins the waitlist at number ${line.length}.`,
+            "rejected",
+            { slot: [request.provider, slot], customer: who },
+          );
         } else {
           correctlyRefused += 1;
           emit(
@@ -224,7 +287,7 @@ export function simulate(
         slot: [request.provider, slot],
         customer: who,
       });
-      schedule(t + (request.writeMs ?? DEFAULT_WRITE_MS), { kind: "write", request, slot });
+      schedule(t + (request.writeMs ?? DEFAULT_WRITE_MS), { kind: "write", request, slot, claim: step.claim });
       continue;
     }
 
@@ -246,6 +309,8 @@ export function simulate(
               incidents: [{ type: "turned-away", cause: "hold-expiry", customer: who }],
             },
           );
+        } else if (step.claim) {
+          refuseClaim(t, "Database", request, existing[0], slot);
         } else {
           correctlyRefused += 1;
           emit(
@@ -295,6 +360,10 @@ export function simulate(
         incidents,
       });
 
+      if (request.cancelAfterMs !== undefined && !request.payment) {
+        schedule(t + request.cancelAfterMs, { kind: "cancel", request });
+      }
+
       if (request.payment?.outcome === "abandoned") {
         schedule(t + request.payment.afterMs, { kind: "abandon", request });
       } else if (request.payment?.outcome === "paid") {
@@ -317,6 +386,63 @@ export function simulate(
         "info",
         { slot: [request.provider, booking?.slot ?? request.slot], customer: who },
       );
+      continue;
+    }
+
+    if (step.kind === "cancel") {
+      const booking = latestBooking(bookings, request.id);
+      if (!booking || booking.status !== "confirmed") {
+        continue;
+      }
+      booking.status = "released";
+      const { slot } = booking;
+      const slotRef: [string, number] = [booking.provider, slot];
+      const key = slotKey(booking.provider, slot);
+      const line = waitlists.get(key) ?? [];
+      emit(t, who, `Cancels their ${formatSlot(slot)} appointment with ${doctor}.`, "info", {
+        slot: slotRef,
+        customer: who,
+      });
+
+      if (line.length === 0) {
+        continue;
+      }
+
+      if (guardrails["waitlist-claim"]) {
+        const next = line.shift()!;
+        bookings.push({
+          id: `b${bookings.length + 1}`,
+          requestId: next.id,
+          customer: next.customer,
+          provider: booking.provider,
+          slot,
+          intendedSlot: slot,
+          status: "confirmed",
+          holdExpiresAt: null,
+          confirmations: 1,
+        });
+        emit(
+          t,
+          "Database",
+          `Gives ${formatSlot(slot)} to ${next.customer}, first on the waitlist, in the same transaction as the cancellation.`,
+          "ok",
+          { slot: slotRef, customer: next.customer },
+        );
+        continue;
+      }
+
+      waitlists.delete(key);
+      emit(
+        t,
+        "Waitlist notifier",
+        `Texts ${listNames(line.map((waiter) => waiter.customer))} that ${formatSlot(slot)} is open. Whoever taps first gets it.`,
+        "info",
+        { slot: slotRef },
+      );
+      line.forEach((waiter, position) => {
+        linePosition.set(waiter.id, position);
+        schedule(t + (waiter.claimMs ?? DEFAULT_CLAIM_MS), { kind: "read", request: waiter, slot, claim: true });
+      });
       continue;
     }
 
@@ -408,6 +534,13 @@ function latestBooking(bookings: Booking[], requestId: string): Booking | undefi
   return undefined;
 }
 
+function listNames(names: string[]): string {
+  if (names.length <= 1) {
+    return names.join("");
+  }
+  return `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
+}
+
 function minutesAgo(expiredAt: number, now: number): string {
   const minutes = Math.max(1, Math.round((now - expiredAt) / 60_000));
   return `${minutes} min ago`;
@@ -426,8 +559,8 @@ function summarize(
     correctlyRefused,
     refunds,
     affectedCustomers: [],
-    byType: { "double-booking": 0, "turned-away": 0, "charged-twice": 0, "wrong-time": 0 },
-    byCause: { "slot-lock": 0, "hold-expiry": 0, idempotency: 0, "tz-normalize": 0 },
+    byType: { "double-booking": 0, "turned-away": 0, "charged-twice": 0, "wrong-time": 0, "passed-over": 0 },
+    byCause: { "slot-lock": 0, "hold-expiry": 0, idempotency: 0, "tz-normalize": 0, "waitlist-claim": 0 },
   };
   const affected = new Set<string>();
 

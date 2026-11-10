@@ -113,6 +113,24 @@ export const guardrails: GuardrailInfo[] = [
   .fromISO(input.localTime, { zone: "Asia/Karachi" })
   .toUTC();`,
   },
+  {
+    id: "waitlist-claim",
+    name: "Waitlist handoff",
+    summary: "A cancelled slot goes to the first waitlisted patient in the same transaction.",
+    prevents: "The longest-waiting patient losing a freed slot to a faster tap",
+    code: `with freed as (
+  update bookings set status = 'cancelled'
+  where id = $1 returning provider_id, starts_at
+), next as (
+  select w.id, w.patient_id from waitlist w, freed f
+  where w.provider_id = f.provider_id and w.starts_at = f.starts_at
+  order by w.joined_at limit 1
+  for update skip locked
+)
+insert into bookings (provider_id, starts_at, patient_id, status)
+select f.provider_id, f.starts_at, n.patient_id, 'confirmed'
+from freed f, next n;`,
+  },
 ];
 
 export function guardrailInfo(id: GuardrailId): GuardrailInfo {
@@ -128,6 +146,7 @@ export const allOff: Guardrails = {
   "hold-expiry": false,
   idempotency: false,
   "tz-normalize": false,
+  "waitlist-claim": false,
 };
 
 export const allOn: Guardrails = {
@@ -135,6 +154,7 @@ export const allOn: Guardrails = {
   "hold-expiry": true,
   idempotency: true,
   "tz-normalize": true,
+  "waitlist-claim": true,
 };
 
 export const incidentLabels: Record<IncidentType, { name: string; plural: string }> = {
@@ -142,6 +162,7 @@ export const incidentLabels: Record<IncidentType, { name: string; plural: string
   "turned-away": { name: "Turned away from an open slot", plural: "Turned away from open slots" },
   "charged-twice": { name: "Charged twice", plural: "Charged twice" },
   "wrong-time": { name: "Booked at the wrong time", plural: "Booked at the wrong time" },
+  "passed-over": { name: "Passed over on the waitlist", plural: "Passed over on the waitlist" },
 };
 
 /** The offset suffix a browser puts on an ISO timestamp, e.g. "+04:00". */

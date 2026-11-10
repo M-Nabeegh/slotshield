@@ -2,7 +2,8 @@ export type GuardrailId =
   | "slot-lock"
   | "hold-expiry"
   | "idempotency"
-  | "tz-normalize";
+  | "tz-normalize"
+  | "waitlist-claim";
 
 export type Guardrails = Record<GuardrailId, boolean>;
 
@@ -11,13 +12,16 @@ export type ScenarioId =
   | "expired-hold"
   | "duplicate-callback"
   | "timezone"
+  | "clock-change"
+  | "waitlist"
   | "rush-hour";
 
 export type IncidentType =
   | "double-booking"
   | "turned-away"
   | "charged-twice"
-  | "wrong-time";
+  | "wrong-time"
+  | "passed-over";
 
 export interface Provider {
   id: string;
@@ -55,6 +59,14 @@ export interface BookingRequest {
   slot: number;
   clientOffsetMin?: number;
   clientCity?: string;
+  /** The offset saved on the patient's profile; stale once their clocks change. */
+  profileOffsetMin?: number;
+  /** Join the waitlist instead of leaving when the slot is taken. */
+  waitlist?: boolean;
+  /** How long this patient takes to act on a "slot open" message. */
+  claimMs?: number;
+  /** Cancel the confirmed appointment this long after it is written. */
+  cancelAfterMs?: number;
   readMs?: number;
   writeMs?: number;
   payment?: PaymentPlan;

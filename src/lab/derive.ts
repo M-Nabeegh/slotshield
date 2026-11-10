@@ -18,12 +18,14 @@ export function progressAt(run: RunResult, index: number): Progress {
     "turned-away": 0,
     "charged-twice": 0,
     "wrong-time": 0,
+    "passed-over": 0,
   };
   const byCause: Record<GuardrailId, number> = {
     "slot-lock": 0,
     "hold-expiry": 0,
     idempotency: 0,
     "tz-normalize": 0,
+    "waitlist-claim": 0,
   };
   const affected = new Set<string>();
   let refused = 0;

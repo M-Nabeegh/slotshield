@@ -25,7 +25,7 @@ export function ScenarioPicker({ value, onChange }: ScenarioPickerProps) {
           >
             <span className="scenario-option-title">{scenario.title}</span>
             <span className="scenario-option-meta">
-              {scenario.focus ? `Tests ${guardrailInfo(scenario.focus).name.toLowerCase()}` : "Tests all four guardrails"}
+              {scenario.focus ? `Tests ${guardrailInfo(scenario.focus).name.toLowerCase()}` : "Mixed traffic, replayable by number"}
             </span>
           </button>
         ))}
