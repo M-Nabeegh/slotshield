@@ -37,3 +37,8 @@ jobs:
 
       - name: Build static preview
         run: npm run build:pages
+
+      - name: Build and smoke-test the CLI
+        run: |
+          npm run build:cli
+          node dist/cli/slotshield.js simulate --traffic rush-hour --guardrails all

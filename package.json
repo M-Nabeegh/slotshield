@@ -1,8 +1,11 @@
 {
   "name": "slotshield",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
+  "bin": {
+    "slotshield": "dist/cli/slotshield.js"
+  },
   "engines": {
     "node": ">=22.13.0"
   },
@@ -10,6 +13,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "build:pages": "tsc --noEmit && vite build --mode pages",
+    "build:cli": "tsc --noEmit && vite build --config vite.cli.config.ts",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",

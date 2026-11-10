@@ -2,7 +2,7 @@
 
 SlotShield sends realistic traffic through a model of a clinic's booking API and shows you, appointment by appointment, what goes wrong when a guardrail is missing.
 
-Turn the unique slot constraint off and two patients land in the same chair. Leave stale holds alone and an abandoned checkout keeps a free slot blocked for good. Process webhook retries twice and someone pays their deposit twice. Read a browser's timestamp at face value and a patient in Dubai turns up an hour early.
+Turn the unique slot constraint off and two patients land in the same chair. Leave stale holds alone and an abandoned checkout keeps a free slot blocked for good. Process webhook retries twice and someone pays their deposit twice. Read a browser's timestamp at face value and a patient in Dubai turns up an hour early. Text the whole waitlist when a slot frees up and the patient who waited longest loses it to whoever taps first.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/lab-dark.png" />
@@ -20,9 +20,10 @@ The lab is a small discrete-event simulation (`src/engine`). Every booking reque
 | Unique slot constraint | The database checks for an active booking at write time | Requests whose reads overlap both succeed |
 | Expire stale holds | Lapsed payment holds are released before availability is read | Abandoned checkouts block open slots |
 | Idempotent webhooks | Payment event IDs are recorded and repeats skipped | Each provider retry captures the deposit again |
-| Explicit time zones | Submitted times are read as clinic time (Asia/Karachi) | The browser's offset shifts or voids the appointment |
+| Explicit time zones | Submitted times are read as clinic time (Asia/Karachi) | The browser's offset, or one saved before the clocks changed, shifts or voids the appointment |
+| Waitlist handoff | A cancelled slot goes to the first waitlisted patient in the same transaction | Everyone waiting is texted at once and the fastest tap wins |
 
-There are five kinds of traffic. Four focus on one failure each; **Monday rush** sends thirty patients over half an hour from a seeded generator, so a given traffic number always replays identically.
+There are seven kinds of traffic. Six focus on one failure each, including patients whose saved time zone went stale when daylight saving changed and two cancellations that set off a waitlist race. **Monday rush** sends thirty patients over half an hour from a seeded generator, so a given traffic number always replays identically.
 
 After a run you can:
 
@@ -39,6 +40,34 @@ After a run you can:
 
 Both need the small server built into the dev and preview servers. The GitLab Pages build is static, so there the lab works fully and these two pages explain how to run them locally.
 
+## Command line
+
+The same engine and staging adapter run from a terminal, so a pipeline can fail when a guardrail is missing.
+
+```bash
+npm run build:cli
+node dist/cli/slotshield.js scenarios
+node dist/cli/slotshield.js simulate --traffic waitlist --guardrails slot-lock
+SLOTSHIELD_TOKEN=... node dist/cli/slotshield.js staging --url https://staging.example.com
+```
+
+`simulate` prints each incident with its time and the guardrails that would have prevented it. `staging` calls the two test-only endpoints from the [adapter contract](docs/test-adapter-contract.md) and reads the token from `SLOTSHIELD_TOKEN`, never from a flag. Both take `--json`. The exit code is `0` when everything is clean, `1` when there are incidents or a scenario needs attention, and `2` for bad usage.
+
+In GitHub Actions:
+
+```yaml
+- uses: actions/checkout@v4
+  with:
+    repository: M-Nabeegh/slotshield
+- uses: actions/setup-node@v4
+  with:
+    node-version: 22
+- run: npm install && npm run build:cli
+- run: node dist/cli/slotshield.js staging --url https://staging.example.com
+  env:
+    SLOTSHIELD_TOKEN: ${{ secrets.SLOTSHIELD_TOKEN }}
+```
+
 ## Run it
 
 Requires Node.js 22.13 or newer.
@@ -49,10 +78,11 @@ npm run dev
 ```
 
 ```bash
-npm test             # engine, share links, UI interactions, API handlers
+npm test             # engine, share links, UI interactions, API handlers, CLI
 npm run lint
 npm run build        # app with API routes (vite preview serves them)
 npm run build:pages  # static build for GitLab Pages
+npm run build:cli    # dist/cli/slotshield.js
 ```
 
 ## Project layout
@@ -63,6 +93,7 @@ src/lab/       schedule, replay, event log, outcome, history, share links
 src/check/     public page check
 src/adapter/   staging adapter runner
 server/        URL safety, page inspection, adapter contract, Vite middleware
+cli/           command-line front end to the engine and the staging adapter
 docs/          adapter contract and screenshots
 ```
 
